@@ -52,6 +52,9 @@ urlpatterns = [
     path('ventas/', include('ventas.urls')),            # Gestión de ventas
     path('reportes/', include('reportes.urls')),        # Sistema de reportes
     
+    # URLs de las APIs REST
+    path('api/', include('tradeinventory.api_urls')),   # APIs REST
+    
     # URLs del sistema de autenticación
     # Usa las vistas de autenticación de Django con plantillas personalizadas
     path('accounts/login/', auth_views.LoginView.as_view(template_name='registration/login.html'), name='login'),
