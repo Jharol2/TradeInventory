@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+
+{% block title %}Crear Almacén - TradeInventory{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4">
+    <h1 class="mt-4">Crear Almacén</h1>
+    <ol class="breadcrumb mb-4">
+        <li class="breadcrumb-item"><a href="{% url 'almacenes:lista_almacenes' %}">Almacenes</a></li>
+        <li class="breadcrumb-item active">Crear Almacén</li>
+    </ol>
+
+    <div class="card mb-4">
+        <div class="card-header">
+            <i class="fas fa-warehouse me-1"></i>
+            Información del Almacén
+        </div>
+        <div class="card-body">
+            <form method="post">
+                {% csrf_token %}
+                
+                <!-- Información Principal -->
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <h5 class="mb-3 text-primary">
+                            <i class="fas fa-info-circle me-2"></i>Información Principal
+                        </h5>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="nombre" class="form-label">Nombre</label>
+                            <input type="text" name="nombre" id="nombre" class="form-control" required>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="direccion" class="form-label">Dirección</label>
+                            <input type="text" name="direccion" id="direccion" class="form-control" required>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-4">
+                    <a href="{% url 'almacenes:lista_almacenes' %}" class="btn btn-secondary">
+                        <i class="fas fa-times me-1"></i>Cancelar
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save me-1"></i>Guardar Almacén
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %} 

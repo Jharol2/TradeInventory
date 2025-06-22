@@ -1,0 +1,221 @@
+{% extends 'base.html' %}
+
+{% block title %}Reporte de Ventas - TradeInventory{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Reporte de Ventas</h2>
+    
+    <!-- Filtros de fecha -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-4">
+                    <label for="fecha_inicio" class="form-label">Fecha Inicio</label>
+                    <input type="date" class="form-control" id="fecha_inicio" name="fecha_inicio" value="{{ fecha_inicio }}">
+                </div>
+                <div class="col-md-4">
+                    <label for="fecha_fin" class="form-label">Fecha Fin</label>
+                    <input type="date" class="form-control" id="fecha_fin" name="fecha_fin" value="{{ fecha_fin }}">
+                </div>
+                <div class="col-md-4 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary me-2">Filtrar</button>
+                    <a href="?formato=excel&fecha_inicio={{ fecha_inicio }}&fecha_fin={{ fecha_fin }}" class="btn btn-success">
+                        Exportar a Excel
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Resumen del Reporte -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="card-title">Total Ventas</h5>
+                    <h3 class="text-primary">{{ ventas_por_dia|length }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="card-title">Valor Total</h5>
+                    <h3 class="text-success">
+                        ${{ ventas_por_dia|dictsort:"monto_total"|last|default:0|floatformat:2 }}
+                    </h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="card-title">Productos Top</h5>
+                    <h3 class="text-info">{{ productos_top|length }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="card-title">Período</h5>
+                    <small>{{ fecha_inicio }} al {{ fecha_fin }}</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Ventas por Día -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h4>Ventas por Día</h4>
+        </div>
+        <div class="card-body">
+            {% if ventas_por_dia %}
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Fecha</th>
+                            <th>Día de la Semana</th>
+                            <th>Cantidad de Ventas</th>
+                            <th>Total Vendido</th>
+                            <th>Promedio por Venta</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for venta in ventas_por_dia %}
+                        <tr>
+                            <td>{{ venta.fecha|date:"d/m/Y" }}</td>
+                            <td>{{ venta.fecha|date:"l" }}</td>
+                            <td>
+                                <span class="badge bg-primary">{{ venta.total_ventas }}</span>
+                            </td>
+                            <td>
+                                <span class="text-success fw-bold">${{ venta.monto_total|floatformat:2 }}</span>
+                            </td>
+                            <td>
+                                ${{ venta.promedio_venta|floatformat:2 }}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle"></i> No hay ventas registradas para el período seleccionado.
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Ventas por Mes -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h4>Ventas por Mes</h4>
+        </div>
+        <div class="card-body">
+            {% if ventas_por_mes %}
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Mes</th>
+                            <th>Cantidad de Ventas</th>
+                            <th>Total Vendido</th>
+                            <th>Promedio por Venta</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for venta in ventas_por_mes %}
+                        <tr>
+                            <td>
+                                <span class="fw-bold">
+                                    {% if venta.mes == 1 %}Enero
+                                    {% elif venta.mes == 2 %}Febrero
+                                    {% elif venta.mes == 3 %}Marzo
+                                    {% elif venta.mes == 4 %}Abril
+                                    {% elif venta.mes == 5 %}Mayo
+                                    {% elif venta.mes == 6 %}Junio
+                                    {% elif venta.mes == 7 %}Julio
+                                    {% elif venta.mes == 8 %}Agosto
+                                    {% elif venta.mes == 9 %}Septiembre
+                                    {% elif venta.mes == 10 %}Octubre
+                                    {% elif venta.mes == 11 %}Noviembre
+                                    {% elif venta.mes == 12 %}Diciembre
+                                    {% else %}Mes {{ venta.mes }}
+                                    {% endif %}
+                                </span>
+                            </td>
+                            <td>
+                                <span class="badge bg-info">{{ venta.total_ventas }}</span>
+                            </td>
+                            <td>
+                                <span class="text-success fw-bold">${{ venta.monto_total|floatformat:2 }}</span>
+                            </td>
+                            <td>
+                                ${{ venta.promedio_venta|floatformat:2 }}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle"></i> No hay ventas registradas para el período seleccionado.
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Productos Más Vendidos -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h4>Productos Más Vendidos</h4>
+        </div>
+        <div class="card-body">
+            {% if productos_top %}
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Ranking</th>
+                            <th>Producto</th>
+                            <th>Cantidad Vendida</th>
+                            <th>Total Ingresos</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for producto in productos_top %}
+                        <tr>
+                            <td>
+                                <span class="badge {% if forloop.counter == 1 %}bg-warning{% elif forloop.counter == 2 %}bg-secondary{% elif forloop.counter == 3 %}bg-info{% else %}bg-light text-dark{% endif %}">
+                                    #{{ forloop.counter }}
+                                </span>
+                            </td>
+                            <td>
+                                <span class="fw-bold">{{ producto.producto__nombre }}</span>
+                            </td>
+                            <td>
+                                <span class="badge bg-primary">{{ producto.total_vendido }}</span>
+                            </td>
+                            <td>
+                                <span class="text-success fw-bold">${{ producto.total_ingresos|floatformat:2 }}</span>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle"></i> No hay datos de ventas para el período seleccionado.
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %} 

@@ -1,0 +1,115 @@
+{% extends 'base.html' %}
+
+{% block title %}Abonar Venta - {{ cliente.nombre }}{% endblock %}
+
+{% block page_title %}Abonar Venta{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <a href="{% url 'clientes:productos_deuda' 'venta' venta.id %}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left me-2"></i>Volver a Productos
+        </a>
+        <h4 class="mb-0">Cliente: {{ cliente.nombre }}</h4>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="fas fa-money-bill-wave me-2"></i>Abonar Venta Completa
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <h6><i class="fas fa-info-circle me-2"></i>Información de la Venta</h6>
+                        <p class="mb-1"><strong>Fecha:</strong> {{ venta.fecha|date:"d/m/Y H:i" }}</p>
+                        <p class="mb-1"><strong>Total de la Venta:</strong> ${{ total_venta|floatformat:2 }}</p>
+                        <p class="mb-0"><strong>Productos:</strong> {{ todos_detalles.count }}</p>
+                    </div>
+
+                    <!-- Lista de Productos -->
+                    <div class="table-responsive mb-4">
+                        <table class="table table-bordered table-sm">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Producto</th>
+                                    <th>Cantidad</th>
+                                    <th>Precio Unitario</th>
+                                    <th>Subtotal</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for detalle in todos_detalles %}
+                                <tr>
+                                    <td>
+                                        <strong>{{ detalle.producto.nombre }}</strong>
+                                        {% if detalle.producto.descripcion %}
+                                            <br><small class="text-muted">{{ detalle.producto.descripcion }}</small>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ detalle.cantidad }}</td>
+                                    <td>${{ detalle.precio_unitario|floatformat:2 }}</td>
+                                    <td class="fw-bold">${{ detalle.subtotal|floatformat:2 }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                            <tfoot class="table-light">
+                                <tr>
+                                    <td colspan="3" class="text-end"><strong>TOTAL:</strong></td>
+                                    <td class="fw-bold">${{ total_venta|floatformat:2 }}</td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label for="monto_abono" class="form-label">
+                                <strong>Monto a Abonar ($)</strong>
+                            </label>
+                            <input type="number" 
+                                   class="form-control form-control-lg" 
+                                   id="monto_abono" 
+                                   name="monto_abono" 
+                                   step="0.01" 
+                                   min="0.01" 
+                                   max="{{ total_venta }}" 
+                                   value="{{ total_venta }}"
+                                   required>
+                            <div class="form-text">
+                                Máximo: ${{ total_venta|floatformat:2 }}
+                            </div>
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="fas fa-check me-2"></i>Confirmar Abono
+                            </button>
+                            <a href="{% url 'clientes:productos_deuda' 'venta' venta.id %}" class="btn btn-outline-secondary">
+                                <i class="fas fa-times me-2"></i>Cancelar
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const montoInput = document.getElementById('monto_abono');
+    const maxMonto = {{ total_venta }};
+    
+    montoInput.addEventListener('input', function() {
+        const valor = parseFloat(this.value);
+        if (valor > maxMonto) {
+            this.value = maxMonto;
+        }
+    });
+});
+</script>
+{% endblock %} 

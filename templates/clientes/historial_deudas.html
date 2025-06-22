@@ -1,0 +1,215 @@
+{% extends 'base.html' %}
+
+{% block title %}Deudas de {{ cliente.nombre }}{% endblock %}
+
+{% block page_title %}Deudas de {{ cliente.nombre }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <a href="{% url 'clientes:lista_clientes' %}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left me-2"></i>Volver a Clientes
+        </a>
+        <a href="{% url 'clientes:lista_productos_deudas' cliente.id %}" class="btn btn-primary">
+            <i class="fas fa-list me-2"></i>Ver Todos los Productos
+        </a>
+    </div>
+
+    <!-- Resumen de Deudas -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                Total Deuda
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">${{ total_deuda|floatformat:2 }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-dollar-sign fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                Fiados Directos
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">${{ total_fiado|floatformat:2 }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-handshake fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                Ventas Fiadas
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">${{ total_ventas_fiadas|floatformat:2 }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-shopping-cart fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                Fiados Pagados
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ fiados_pagados }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-check-circle fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lista de Deudas -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">
+                <i class="fas fa-list-alt me-2"></i>Historial de Deudas
+            </h6>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover" id="dataTable" width="100%" cellspacing="0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Fecha</th>
+                            <th>Tipo</th>
+                            <th>Monto</th>
+                            <th>Estado</th>
+                            <th class="text-center">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for deuda in deudas %}
+                        {% with tipo=deuda|class_name %}
+                        <tr class="{% if tipo == 'Venta' %}table-info{% elif deuda.pagado %}table-success{% else %}table-warning{% endif %}">
+                            <td>{{ deuda.fecha|date:"d/m/Y H:i" }}</td>
+                            <td>
+                                {% if tipo == 'Venta' %}
+                                    <span class="badge bg-info">Venta Fiada</span>
+                                {% else %}
+                                    <span class="badge bg-primary">Venta Fiada</span>
+                                {% endif %}
+                            </td>
+                            <td class="fw-bold">
+                                {% if tipo == 'Venta' %}
+                                    ${{ deuda.total|floatformat:2 }}
+                                {% else %}
+                                    ${{ deuda.monto|floatformat:2 }}
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if tipo == 'Venta' %}
+                                    <span class="badge bg-warning">Pendiente</span>
+                                {% elif deuda.pagado %}
+                                    <span class="badge bg-success">Pagado</span>
+                                {% else %}
+                                    <span class="badge bg-warning">Pendiente</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-center">
+                                {% if tipo == 'Venta' %}
+                                    <a href="{% url 'clientes:productos_deuda' 'venta' deuda.id %}" class="btn btn-sm btn-info">
+                                        <i class="fas fa-eye me-1"></i>Ver Detalles
+                                    </a>
+                                {% else %}
+                                    <a href="{% url 'clientes:productos_deuda' 'fiado' deuda.id %}" class="btn btn-sm btn-info">
+                                        <i class="fas fa-eye me-1"></i>Ver Detalles
+                                    </a>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endwith %}
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" class="text-center py-4">No hay deudas registradas para este cliente.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Confirmación -->
+<div class="modal fade" id="confirmModal" tabindex="-1" aria-labelledby="confirmModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="confirmModalLabel">Confirmar Acción</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="confirmModalBody">
+                ¿Está seguro de que desea realizar esta acción?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <form id="actionForm" method="post" style="display: inline;">
+                    {% csrf_token %}
+                    <input type="hidden" name="accion" id="accionInput">
+                    <button type="submit" class="btn btn-primary">Confirmar</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const actionButtons = document.querySelectorAll('.btn-action');
+    const confirmModal = new bootstrap.Modal(document.getElementById('confirmModal'));
+    const confirmModalBody = document.getElementById('confirmModalBody');
+    const actionForm = document.getElementById('actionForm');
+    const accionInput = document.getElementById('accionInput');
+    
+    actionButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const fiadoId = this.getAttribute('data-fiado-id');
+            const accion = this.getAttribute('data-accion');
+            const clienteNombre = this.getAttribute('data-cliente-nombre');
+            
+            let mensaje = '';
+            if (accion === 'pagar') {
+                mensaje = `¿Está seguro de que desea marcar como PAGADO el fiado #${fiadoId} de ${clienteNombre}?`;
+            } else if (accion === 'cancelar') {
+                mensaje = `¿Está seguro de que desea CANCELAR el fiado #${fiadoId} de ${clienteNombre}?`;
+            }
+            
+            confirmModalBody.textContent = mensaje;
+            accionInput.value = accion;
+            actionForm.action = `/clientes/fiado/${fiadoId}/cambiar-estado/`;
+            
+            confirmModal.show();
+        });
+    });
+});
+</script>
+{% endblock %} 

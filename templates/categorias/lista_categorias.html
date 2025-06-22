@@ -1,0 +1,291 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Categorías{% endblock %}
+
+{% block page_title %}Categorías{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header con acciones principales -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div class="d-flex align-items-center">
+                    <div class="me-3">
+                        <span class="badge bg-primary fs-6">{{ categorias.count }} categorías</span>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <a href="?estado=activo" 
+                           class="btn btn-sm {% if estado_actual == 'activo' %}btn-primary{% else %}btn-outline-primary{% endif %}">
+                            <i class="fas fa-check-circle me-1"></i>Activas
+                        </a>
+                        <a href="?estado=inactivo" 
+                           class="btn btn-sm {% if estado_actual == 'inactivo' %}btn-primary{% else %}btn-outline-primary{% endif %}">
+                            <i class="fas fa-times-circle me-1"></i>Inactivas
+                        </a>
+                    </div>
+                </div>
+                <div class="d-flex gap-2">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-toggle="collapse" data-bs-target="#filtrosAvanzados">
+                        <i class="fas fa-filter me-2"></i>Filtros
+                    </button>
+                    <a href="{% url 'categorias:crear_categoria' %}" class="btn btn-primary">
+                        <i class="fas fa-plus me-2"></i>Nueva Categoría
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtros Avanzados -->
+    <div class="collapse mb-4" id="filtrosAvanzados">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="card-title mb-0">
+                    <i class="fas fa-search me-2"></i>Búsqueda y Filtros
+                </h6>
+            </div>
+            <div class="card-body">
+                <form method="get" class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Buscar categoría</label>
+                        <div class="input-group">
+                            <span class="input-group-text">
+                                <i class="fas fa-search"></i>
+                            </span>
+                            <input type="text" name="q" class="form-control" placeholder="Nombre de la categoría..." 
+                                   value="{{ request.GET.q }}">
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Ordenar por</label>
+                        <select name="orden" class="form-select">
+                            <option value="nombre" {% if request.GET.orden == 'nombre' %}selected{% endif %}>Nombre A-Z</option>
+                            <option value="-nombre" {% if request.GET.orden == '-nombre' %}selected{% endif %}>Nombre Z-A</option>
+                            <option value="productos" {% if request.GET.orden == 'productos' %}selected{% endif %}>Más productos</option>
+                            <option value="-productos" {% if request.GET.orden == '-productos' %}selected{% endif %}>Menos productos</option>
+                            <option value="fecha" {% if request.GET.orden == 'fecha' %}selected{% endif %}>Más recientes</option>
+                            <option value="-fecha" {% if request.GET.orden == '-fecha' %}selected{% endif %}>Más antiguos</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">&nbsp;</label>
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary flex-grow-1">
+                                <i class="fas fa-search me-2"></i>Buscar
+                            </button>
+                            <a href="{% url 'categorias:lista_categorias' %}" class="btn btn-outline-secondary">
+                                <i class="fas fa-times"></i>
+                            </a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lista de Categorías -->
+    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 row-cols-xl-4 g-4">
+        {% for categoria in categorias %}
+        <div class="col">
+            <div class="card h-100 categoria-card">
+                {% if categoria.imagen %}
+                    <img src="{{ categoria.imagen.url }}" class="card-img-top" alt="{{ categoria.nombre }}" 
+                         style="height: 200px; object-fit: cover;">
+                {% else %}
+                    <div class="card-img-top bg-light d-flex align-items-center justify-content-center" 
+                         style="height: 200px;">
+                        <i class="fas fa-folder fa-3x text-muted"></i>
+                    </div>
+                {% endif %}
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <h5 class="card-title mb-0">{{ categoria.nombre }}</h5>
+                        <div class="card-options">
+                            <div class="dropdown">
+                                <button class="btn btn-link p-0" type="button" data-bs-toggle="dropdown" 
+                                        style="background: #3498db; border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;">
+                                    <i class="fas fa-ellipsis-v text-white"></i>
+                                </button>
+                                <div class="dropdown-menu dropdown-menu-end">
+                                    <a href="{% url 'categorias:editar_categoria' categoria.id %}" class="dropdown-item">
+                                        <i class="fas fa-edit me-2"></i>Editar
+                                    </a>
+                                    <a href="{% url 'categorias:detalle_categoria' categoria.id %}" class="dropdown-item">
+                                        <i class="fas fa-box me-2"></i>Ver productos
+                                    </a>
+                                    <div class="dropdown-divider"></div>
+                                    <a href="#" class="dropdown-item btn-cambiar-estado {% if categoria.activo %}text-danger{% else %}text-success{% endif %}" 
+                                       data-bs-toggle="modal"
+                                       data-bs-target="#confirmarModal"
+                                       data-url="{% url 'categorias:cambiar_estado' categoria.pk %}"
+                                       data-nombre="{{ categoria.nombre }}"
+                                       data-accion="{% if categoria.activo %}desactivar{% else %}activar{% endif %}">
+                                        <i class="fas {% if categoria.activo %}fa-ban{% else %}fa-check-circle{% endif %} me-2"></i>
+                                        {% if categoria.activo %}Desactivar{% else %}Activar{% endif %}
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="d-flex align-items-center">
+                            <span class="badge bg-info me-2">
+                                <i class="fas fa-box me-1"></i>{{ categoria.productos.count }} productos
+                            </span>
+                            {% if categoria.activo %}
+                                <span class="badge bg-success">
+                                    <i class="fas fa-check-circle me-1"></i>Activa
+                                </span>
+                            {% else %}
+                                <span class="badge bg-danger">
+                                    <i class="fas fa-times-circle me-1"></i>Inactiva
+                                </span>
+                            {% endif %}
+                        </div>
+                        <a href="{% url 'categorias:detalle_categoria' categoria.id %}" 
+                           class="btn btn-outline-primary btn-sm">
+                            <i class="fas fa-eye me-1"></i>Ver
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12">
+            <div class="alert alert-info text-center">
+                <i class="fas fa-info-circle fa-2x mb-3"></i>
+                <h5>No se encontraron categorías</h5>
+                <p class="mb-0">Crea tu primera categoría para organizar tus productos</p>
+                <a href="{% url 'categorias:crear_categoria' %}" class="btn btn-primary mt-3">
+                    <i class="fas fa-plus me-2"></i>Crear Categoría
+                </a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Paginación -->
+    {% if categorias.has_other_pages %}
+    <nav class="mt-4">
+        <ul class="pagination justify-content-center">
+            {% if categorias.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page=1{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.estado %}&estado={{ request.GET.estado }}{% endif %}{% if request.GET.orden %}&orden={{ request.GET.orden }}{% endif %}">
+                        <i class="fas fa-angle-double-left"></i>
+                    </a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ categorias.previous_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.estado %}&estado={{ request.GET.estado }}{% endif %}{% if request.GET.orden %}&orden={{ request.GET.orden }}{% endif %}">
+                        <i class="fas fa-angle-left"></i>
+                    </a>
+                </li>
+            {% endif %}
+
+            {% for num in categorias.paginator.page_range %}
+                {% if categorias.number == num %}
+                    <li class="page-item active">
+                        <span class="page-link">{{ num }}</span>
+                    </li>
+                {% elif num > categorias.number|add:'-3' and num < categorias.number|add:'3' %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ num }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.estado %}&estado={{ request.GET.estado }}{% endif %}{% if request.GET.orden %}&orden={{ request.GET.orden }}{% endif %}">
+                            {{ num }}
+                        </a>
+                    </li>
+                {% endif %}
+            {% endfor %}
+
+            {% if categorias.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ categorias.next_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.estado %}&estado={{ request.GET.estado }}{% endif %}{% if request.GET.orden %}&orden={{ request.GET.orden }}{% endif %}">
+                        <i class="fas fa-angle-right"></i>
+                    </a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ categorias.paginator.num_pages }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.estado %}&estado={{ request.GET.estado }}{% endif %}{% if request.GET.orden %}&orden={{ request.GET.orden }}{% endif %}">
+                        <i class="fas fa-angle-double-right"></i>
+                    </a>
+                </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+</div>
+
+<!-- Modal de confirmación -->
+<div class="modal fade" id="confirmarModal" tabindex="-1" aria-labelledby="confirmarModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="confirmarModalLabel">Confirmar acción</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+      </div>
+      <div class="modal-body">
+        ¿Estás seguro que deseas <span id="accionModal"></span> la categoría <strong id="nombreCategoriaModal"></strong>?
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <a href="#" id="confirmarAccionBtn" class="btn btn-primary">Sí, continuar</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% block extra_css %}
+<style>
+    .categoria-card {
+        transition: all 0.3s ease;
+        border: 1px solid #e9ecef;
+    }
+
+    .categoria-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 25px rgba(52, 152, 219, 0.15);
+    }
+
+    .categoria-card .card-options {
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+
+    .categoria-card:hover .card-options {
+        opacity: 1;
+    }
+
+    .btn-group .btn {
+        border-radius: 6px;
+        margin: 0 2px;
+    }
+
+    .badge {
+        font-size: 0.75rem;
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var confirmarModal = document.getElementById('confirmarModal');
+    var confirmarAccionBtn = document.getElementById('confirmarAccionBtn');
+    var nombreCategoriaModal = document.getElementById('nombreCategoriaModal');
+    var accionModal = document.getElementById('accionModal');
+
+    document.querySelectorAll('.btn-cambiar-estado').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            var url = this.getAttribute('data-url');
+            var nombre = this.getAttribute('data-nombre');
+            var accion = this.getAttribute('data-accion');
+            confirmarAccionBtn.href = url;
+            nombreCategoriaModal.textContent = nombre;
+            accionModal.textContent = accion;
+            confirmarAccionBtn.classList.remove('btn-danger', 'btn-success');
+            confirmarAccionBtn.classList.add('btn-primary');
+        });
+    });
+});
+</script>
+{% endblock %}
+{% endblock %} 

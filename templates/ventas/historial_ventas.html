@@ -1,0 +1,156 @@
+{% extends 'base.html' %}
+
+{% block title %}Historial de Ventas - TradeInventory{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-0 text-gray-800">
+                <i class="fas fa-history me-2"></i>Historial de Ventas
+            </h1>
+            <p class="text-muted mb-0">Registro de todas las ventas realizadas</p>
+        </div>
+        <a href="{% url 'ventas:lista_ventas' %}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left me-2"></i>Volver
+        </a>
+    </div>
+
+    <!-- Filtros -->
+    <div class="card shadow mb-4">
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-3">
+                    <div class="form-group">
+                        <label>Fecha Inicio</label>
+                        <input type="date" class="form-control" id="fechaInicio">
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="form-group">
+                        <label>Fecha Fin</label>
+                        <input type="date" class="form-control" id="fechaFin">
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="form-group">
+                        <label>Cliente</label>
+                        <select class="form-select" id="filtroCliente">
+                            <option value="">Todos los clientes</option>
+                            {% for cliente in clientes %}
+                            <option value="{{ cliente.id }}">{{ cliente.nombre }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="form-group">
+                        <label>Estado</label>
+                        <select class="form-select" id="filtroEstado">
+                            <option value="">Todos</option>
+                            <option value="pagado">Pagado</option>
+                            <option value="pendiente">Pendiente</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabla de Ventas -->
+    <div class="card shadow mb-4">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Fecha</th>
+                            <th>Cliente</th>
+                            <th>Total</th>
+                            <th>Estado</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for venta in ventas %}
+                        <tr>
+                            <td>{{ venta.id }}</td>
+                            <td>{{ venta.fecha|date:"d/m/Y H:i" }}</td>
+                            <td>{{ venta.cliente.nombre|default:"Cliente General" }}</td>
+                            <td>${{ venta.total|floatformat:2 }}</td>
+                            <td>
+                                {% if venta.pagado %}
+                                <span class="badge bg-success">Pagado</span>
+                                {% else %}
+                                <span class="badge bg-warning">Pendiente</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <a href="{% url 'ventas:detalle_venta' venta.id %}" class="btn btn-info btn-sm">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-center">No hay ventas registradas</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    $('#dataTable').DataTable({
+        "language": {
+            "url": "//cdn.datatables.net/plug-ins/1.10.24/i18n/Spanish.json"
+        },
+        "order": [[1, "desc"]], // Ordenar por fecha descendente
+        "pageLength": 25
+    });
+
+    // Aplicar filtros
+    function aplicarFiltros() {
+        const fechaInicio = $('#fechaInicio').val();
+        const fechaFin = $('#fechaFin').val();
+        const cliente = $('#filtroCliente').val();
+        const estado = $('#filtroEstado').val();
+
+        const table = $('#dataTable').DataTable();
+        
+        // Función de filtrado personalizada
+        $.fn.dataTable.ext.search.push(function(settings, data, dataIndex) {
+            const row = table.row(dataIndex).data();
+            const fechaVenta = new Date(row[1].split(' ')[0].split('/').reverse().join('-'));
+            const clienteVenta = row[2];
+            const estadoVenta = row[4].includes('Pagado') ? 'pagado' : 'pendiente';
+
+            // Filtro de fechas
+            if (fechaInicio && fechaVenta < new Date(fechaInicio)) return false;
+            if (fechaFin && fechaVenta > new Date(fechaFin)) return false;
+
+            // Filtro de cliente
+            if (cliente && clienteVenta !== $('#filtroCliente option:selected').text()) return false;
+
+            // Filtro de estado
+            if (estado && estadoVenta !== estado) return false;
+
+            return true;
+        });
+
+        table.draw();
+    }
+
+    // Eventos de cambio en filtros
+    $('#fechaInicio, #fechaFin, #filtroCliente, #filtroEstado').change(aplicarFiltros);
+});
+</script>
+{% endblock %} 

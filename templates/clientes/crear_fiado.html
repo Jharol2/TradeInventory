@@ -1,0 +1,69 @@
+{% extends 'base.html' %}
+
+{% block title %}Registrar Fiado - TradeInventory{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4">
+    <h1 class="mt-4">Registrar Fiado</h1>
+    <ol class="breadcrumb mb-4">
+        <li class="breadcrumb-item"><a href="{% url 'clientes:lista_clientes' %}">Clientes</a></li>
+        <li class="breadcrumb-item active">Registrar Fiado</li>
+    </ol>
+
+    <div class="card mb-4">
+        <div class="card-header">
+            <i class="fas fa-file-invoice-dollar me-1"></i>
+            Información del Fiado
+        </div>
+        <div class="card-body">
+            <form method="post">
+                {% csrf_token %}
+                
+                <!-- Información Principal -->
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <h5 class="mb-3 text-primary">
+                            <i class="fas fa-info-circle me-2"></i>Información Principal
+                        </h5>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="{{ form.cliente.id_for_label }}" class="form-label">
+                                Cliente
+                            </label>
+                            {{ form.cliente }}
+                            {% if form.cliente.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.cliente.errors }}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="{{ form.monto.id_for_label }}" class="form-label">
+                                Monto
+                            </label>
+                            {{ form.monto }}
+                            {% if form.monto.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.monto.errors }}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-4">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save me-1"></i>Guardar Fiado
+                    </button>
+                    <a href="{% url 'clientes:lista_clientes' %}" class="btn btn-secondary">
+                        <i class="fas fa-times me-1"></i>Cancelar
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %} 

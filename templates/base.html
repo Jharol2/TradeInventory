@@ -1,0 +1,319 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}TradeInventory{% endblock %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="{% static 'css/styles.css' %}" rel="stylesheet">
+    {% block extra_css %}{% endblock %}
+    <style>
+        body {
+            display: flex;
+            min-height: 100vh;
+            margin: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .sidebar {
+            width: 250px;
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            color: white;
+            padding: 20px 0;
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+        }
+
+        .sidebar .nav-link {
+            color: rgba(255, 255, 255, 0.8);
+            padding: 12px 20px;
+            transition: all 0.3s;
+            border-radius: 8px;
+            margin: 2px 10px;
+        }
+
+        .sidebar .nav-link:hover {
+            color: white;
+            background-color: rgba(255, 255, 255, 0.15);
+            transform: translateX(5px);
+        }
+
+        .sidebar .nav-link.active {
+            background-color: rgba(255, 255, 255, 0.25);
+            font-weight: bold;
+        }
+
+        .sidebar .nav-link.ventas-link {
+            text-align: center;
+            margin-top: auto;
+        }
+
+        .sidebar .nav-link.ventas-link .ventas-container {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .sidebar .nav-link.ventas-link .ventas-icon {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .sidebar .nav-link i {
+            margin-right: 10px;
+            width: 20px;
+            text-align: center;
+        }
+
+        .main-content {
+            flex: 1;
+            margin-left: 250px;
+            padding: 20px;
+            background-color: #f8f9fa;
+        }
+
+        .top-navbar {
+            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+            color: white;
+            padding: 15px 20px;
+            margin-bottom: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .top-navbar h4 {
+            color: white;
+            margin: 0;
+        }
+
+        .top-navbar .nav-icons {
+            display: flex;
+            gap: 15px;
+        }
+
+        .top-navbar .nav-icons a {
+            color: white;
+            font-size: 1.2rem;
+            text-decoration: none;
+        }
+
+        .top-navbar .nav-icons a:hover {
+            color: #ecf0f1;
+        }
+
+        .brand {
+            color: white;
+            font-size: 1.5rem;
+            padding: 15px 20px;
+            margin-bottom: 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .sidebar-inner-container {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        .ventas-container {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
+            padding: 2rem 0;
+        }
+
+        .ventas-icon {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        .ventas-text {
+            font-size: 1.2rem;
+        }
+
+        .user-menu {
+            position: relative;
+        }
+
+        .user-menu .dropdown-toggle {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            border-radius: 8px;
+            padding: 8px 16px;
+        }
+
+        .user-menu .dropdown-toggle:hover {
+            background: rgba(255, 255, 255, 0.2);
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+
+        .user-menu .dropdown-menu {
+            min-width: 200px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            border: none;
+        }
+
+        .user-menu .dropdown-item {
+            padding: 10px 15px;
+            transition: all 0.3s ease;
+        }
+
+        .user-menu .dropdown-item:hover {
+            background-color: #f8f9fa;
+            color: #2c3e50;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+            border: none;
+            border-radius: 8px;
+            padding: 8px 16px;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(52, 152, 219, 0.4);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar -->
+            <div class="col-md-2 sidebar">
+                <div class="sidebar-inner-container">
+                    <div>
+                        <div class="brand">
+                            <i class="fas fa-chart-line me-2"></i>TradeInventory
+                        </div>
+                        <ul class="nav flex-column">
+                            <li class="nav-item">
+                                <a class="nav-link" href="{% url 'home' %}">
+                                    <i class="fas fa-home"></i> Inicio
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="{% url 'productos:lista_productos' %}">
+                                    <i class="fas fa-box"></i> Productos
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="{% url 'categorias:lista_categorias' %}">
+                                    <i class="fas fa-tags"></i> Categorías
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="{% url 'proveedores:lista_proveedores' %}">
+                                    <i class="fas fa-truck"></i> Proveedores
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="{% url 'clientes:lista_clientes' %}">
+                                    <i class="fas fa-users"></i> Clientes
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="{% url 'almacenes:lista_almacenes' %}">
+                                    <i class="fas fa-warehouse"></i> Almacenes
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="{% url 'reportes:lista_reportes' %}">
+                                    <i class="fas fa-chart-bar"></i> Reportes
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                    
+                    <a class="nav-link ventas-link" href="{% url 'ventas:lista_ventas' %}">
+                        <div class="ventas-container">
+                            <i class="fas fa-shopping-cart ventas-icon"></i>
+                            <span class="ventas-text">Ventas</span>
+                        </div>
+                    </a>
+                </div>
+            </div>
+            
+            <!-- Main Content -->
+            <div class="col-md-10 main-content">
+                <!-- Top Navbar -->
+                <div class="top-navbar">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h4 class="mb-0">{% block page_title %}{% endblock %}</h4>
+                        
+                        <!-- User Menu -->
+                        {% if user.is_authenticated %}
+                        <div class="user-menu">
+                            <div class="dropdown">
+                                <button class="btn dropdown-toggle" type="button" id="userMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i class="fas fa-user-circle me-2"></i>{{ user.username }}
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userMenuButton">
+                                    <li>
+                                        <a class="dropdown-item" href="{% url 'perfil' %}">
+                                            <i class="fas fa-user me-2"></i>Mi Perfil
+                                        </a>
+                                    </li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li>
+                                        <a class="dropdown-item text-danger" href="{% url 'logout' %}">
+                                            <i class="fas fa-sign-out-alt me-2"></i>Cerrar Sesión
+                                        </a>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                        {% else %}
+                        <div>
+                            <a href="{% url 'login' %}" class="btn btn-primary">
+                                <i class="fas fa-sign-in-alt me-2"></i>Iniciar Sesión
+                            </a>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Content -->
+                {% if messages %}
+                    <div class="messages">
+                        {% for message in messages %}
+                            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+
+                {% block content %}
+                {% endblock %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Confirmación -->
+    {# {% include 'partials/confirm_modal.html' %} #}
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{% static 'js/main.js' %}"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+
+</html>

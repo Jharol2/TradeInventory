@@ -1,0 +1,202 @@
+{% extends 'base.html' %}
+
+{% block title %}Editar Producto - TradeInventory{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center">
+            <h2>Editar Producto</h2>
+            <a href="{% url 'productos:lista_productos' %}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left"></i> Volver a Productos
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <form method="post" enctype="multipart/form-data" class="needs-validation" novalidate>
+                    {% csrf_token %}
+                    
+                    <div class="row g-4">
+                        <!-- Información Básica -->
+                        <div class="col-md-6">
+                            <div class="card h-100 border-0 bg-light">
+                                <div class="card-body">
+                                    <h5 class="card-title mb-4">
+                                        <i class="fas fa-info-circle text-primary"></i> Información Básica
+                                    </h5>
+                                    
+                                    <div class="mb-3">
+                                        <label for="{{ form.nombre.id_for_label }}" class="form-label fw-bold">
+                                            Nombre del Producto <span class="text-danger">*</span>
+                                        </label>
+                                        {{ form.nombre }}
+                                        {% if form.nombre.errors %}
+                                            <div class="invalid-feedback d-block">
+                                                {{ form.nombre.errors }}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label for="{{ form.descripcion.id_for_label }}" class="form-label fw-bold">
+                                            Descripción
+                                        </label>
+                                        {{ form.descripcion }}
+                                        {% if form.descripcion.errors %}
+                                            <div class="invalid-feedback d-block">
+                                                {{ form.descripcion.errors }}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label for="{{ form.categoria.id_for_label }}" class="form-label fw-bold">
+                                            Categoría <span class="text-danger">*</span>
+                                        </label>
+                                        {{ form.categoria }}
+                                        {% if form.categoria.errors %}
+                                            <div class="invalid-feedback d-block">
+                                                {{ form.categoria.errors }}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label for="{{ form.proveedor.id_for_label }}" class="form-label fw-bold">
+                                            Proveedor <span class="text-danger">*</span>
+                                        </label>
+                                        {{ form.proveedor }}
+                                        {% if form.proveedor.errors %}
+                                            <div class="invalid-feedback d-block">
+                                                {{ form.proveedor.errors }}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Información de Stock y Precio -->
+                        <div class="col-md-6">
+                            <div class="card h-100 border-0 bg-light">
+                                <div class="card-body">
+                                    <h5 class="card-title mb-4">
+                                        <i class="fas fa-box text-primary"></i> Stock y Precio
+                                    </h5>
+
+                                    <div class="mb-3">
+                                        <label for="{{ form.precio.id_for_label }}" class="form-label fw-bold">
+                                            Precio <span class="text-danger">*</span>
+                                        </label>
+                                        <div class="input-group">
+                                            <span class="input-group-text">$</span>
+                                            {{ form.precio }}
+                                        </div>
+                                        {% if form.precio.errors %}
+                                            <div class="invalid-feedback d-block">
+                                                {{ form.precio.errors }}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label for="{{ form.stock_inicial.id_for_label }}" class="form-label fw-bold">
+                                            Stock Inicial <span class="text-danger">*</span>
+                                        </label>
+                                        {{ form.stock_inicial }}
+                                        {% if form.stock_inicial.errors %}
+                                            <div class="invalid-feedback d-block">
+                                                {{ form.stock_inicial.errors }}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label for="{{ form.stock_minimo.id_for_label }}" class="form-label fw-bold">
+                                            Stock Mínimo <span class="text-danger">*</span>
+                                        </label>
+                                        {{ form.stock_minimo }}
+                                        {% if form.stock_minimo.errors %}
+                                            <div class="invalid-feedback d-block">
+                                                {{ form.stock_minimo.errors }}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label for="{{ form.stock_actual.id_for_label }}" class="form-label fw-bold">
+                                            Stock Actual <span class="text-danger">*</span>
+                                        </label>
+                                        {{ form.stock_actual }}
+                                        {% if form.stock_actual.errors %}
+                                            <div class="invalid-feedback d-block">
+                                                {{ form.stock_actual.errors }}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Imagen y Estado -->
+                        <div class="col-12">
+                            <div class="card border-0 bg-light">
+                                <div class="card-body">
+                                    <h5 class="card-title mb-4">
+                                        <i class="fas fa-image text-primary"></i> Imagen y Estado
+                                    </h5>
+
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label for="{{ form.imagen.id_for_label }}" class="form-label fw-bold">
+                                                    Imagen del Producto
+                                                </label>
+                                                {{ form.imagen }}
+                                                {% if form.imagen.errors %}
+                                                    <div class="invalid-feedback d-block">
+                                                        {{ form.imagen.errors }}
+                                                    </div>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label class="form-label fw-bold">Estado</label>
+                                                <div class="form-check form-switch">
+                                                    {{ form.activo }}
+                                                    <label class="form-check-label" for="{{ form.activo.id_for_label }}">
+                                                        Producto Activo
+                                                    </label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <div class="d-flex justify-content-end gap-2">
+                                <a href="{% url 'productos:lista_productos' %}" class="btn btn-outline-secondary">
+                                    <i class="fas fa-times"></i> Cancelar
+                                </a>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-save"></i> Guardar Cambios
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

@@ -1,0 +1,308 @@
+{% extends 'base.html' %}
+{% load humanize %}
+{% load reportes_extras %}
+
+{% block title %}Productos de Deuda - {{ cliente.nombre }}{% endblock %}
+
+{% block page_title %}Productos de {% if es_venta %}Venta{% else %}Fiado{% endif %}{% endblock %}
+
+{% block extra_css %}
+<style>
+.estado-select {
+    min-width: 120px;
+    font-size: 0.9rem;
+    padding: 6px 12px;
+    border-radius: 4px;
+    border: 1px solid #ced4da;
+    background-color: white;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.estado-select:focus {
+    outline: none;
+    border-color: #86b7fe;
+    box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+}
+
+.estado-select.border-warning {
+    border-color: #ffc107 !important;
+    box-shadow: 0 0 0 0.2rem rgba(255, 193, 7, 0.25);
+}
+
+.estado-select.border-danger {
+    border-color: #dc3545 !important;
+    box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
+}
+
+.estado-select option {
+    padding: 8px;
+}
+
+.estado-select option[value=""] {
+    background-color: #f8f9fa;
+    color: #6c757d;
+    font-style: italic;
+}
+
+.estado-select option[value="abonar"] {
+    background-color: #d1ecf1;
+}
+
+.estado-select option[value="cancelado"] {
+    background-color: #f8d7da;
+}
+
+.estado-badge {
+    font-size: 0.75rem;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-weight: 500;
+}
+
+.estado-badge.pendiente {
+    background-color: #fff3cd;
+    color: #856404;
+    border: 1px solid #ffeaa7;
+}
+
+.estado-badge.cancelado {
+    background-color: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
+
+.estado-badge.pagado {
+    background-color: #d1edbf;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
+
+.estado-badge.abonado {
+    background-color: #d1ecf1;
+    color: #0c5460;
+    border: 1px solid #bee5eb;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <a href="{% url 'clientes:deudas_simples' cliente.id %}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left me-2"></i>Volver a Deudas
+        </a>
+        <h4 class="mb-0">Cliente: {{ cliente.nombre }}</h4>
+    </div>
+
+    <!-- Información de la Deuda -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Información de la Deuda</h6>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-3"><strong>Fecha:</strong> {{ deuda.fecha|date:"d/m/Y H:i" }}</div>
+                <div class="col-md-3"><strong>Monto Original:</strong> ${{ deuda.monto|default:deuda.total|floatformat:2 }}</div>
+                <div class="col-md-3 text-success"><strong>Total Abonado:</strong> ${{ deuda.monto_abonado|floatformat:2 }}</div>
+                <div class="col-md-3 text-danger"><strong>Saldo Pendiente:</strong> ${{ deuda.saldo_pendiente|floatformat:2 }}</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Acciones de la Deuda -->
+    {% if deuda.saldo_pendiente > 0 %}
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Acciones de la Deuda</h6>
+        </div>
+        <div class="card-body">
+            <div class="row align-items-center">
+                <div class="col-md-6">
+                    <label for="accionDeuda" class="form-label"><strong>Seleccionar acción para toda la cuenta:</strong></label>
+                    <select class="form-select estado-select border-warning" 
+                            id="accionDeuda"
+                            data-deuda-id="{{ deuda.id }}"
+                            data-tipo="{{ tipo }}"
+                            data-saldo-pendiente="{{ deuda.saldo_pendiente }}">
+                        <option value="">Seleccionar acción...</option>
+                        <option value="abonar">Realizar Abono</option>
+                        <option value="cancelar">Marcar como Cancelado</option>
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <div class="alert alert-info mb-0">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>Nota:</strong> Las acciones se aplicarán a toda la cuenta de {{ es_venta|yesno:"venta,fiado" }}.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Lista de Productos -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Lista de Productos</h6>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Producto</th>
+                            <th>Cantidad</th>
+                            <th>Precio Unitario</th>
+                            <th>Subtotal</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for detalle in detalles %}
+                        <tr class="{% if es_venta %}table-info{% elif detalle.estado == 'cancelado' %}table-danger{% elif detalle.estado == 'abonado' %}table-info{% elif detalle.estado == 'pagado' %}table-success{% else %}table-warning{% endif %}">
+                            <td>
+                                <strong>{{ detalle.producto.nombre }}</strong>
+                                {% if detalle.producto.descripcion %}
+                                    <br><small class="text-muted">{{ detalle.producto.descripcion }}</small>
+                                {% endif %}
+                            </td>
+                            <td>{{ detalle.cantidad }}</td>
+                            <td>${{ detalle.precio_unitario|floatformat:2 }}</td>
+                            <td class="fw-bold">${{ detalle.subtotal|floatformat:2 }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="4" class="text-center py-4">
+                                <i class="fas fa-exclamation-triangle fa-2x text-warning mb-2"></i>
+                                <p class="mb-0">No hay productos registrados en esta {% if es_venta %}venta{% else %}deuda{% endif %}.</p>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Confirmación -->
+<div class="modal fade" id="confirmModalDetalle" tabindex="-1" aria-labelledby="confirmModalDetalleLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="confirmModalDetalleLabel">Confirmar Cambio de Estado</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="confirmModalDetalleBody">
+                ¿Está seguro de que desea cambiar el estado de esta cuenta?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <form id="actionFormDetalle" method="post" style="display: inline;">
+                    {% csrf_token %}
+                    <input type="hidden" name="accion" id="accionInputDetalle">
+                    <button type="submit" class="btn btn-primary">Confirmar</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Abono -->
+<div class="modal fade" id="abonoModal" tabindex="-1" aria-labelledby="abonoModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="abonoModalLabel">Abonar Cuenta</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p id="abonoModalBody">¿Cuánto desea abonar?</p>
+                <div class="mb-3">
+                    <label for="montoAbono" class="form-label">Monto a abonar:</label>
+                    <input type="number" class="form-control" id="montoAbono" step="0.01" min="0.01" required>
+                    <div class="form-text">Saldo pendiente: $<span id="subtotalProducto">0.00</span></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <form id="abonoForm" method="post" style="display: inline;">
+                    {% csrf_token %}
+                    <input type="hidden" name="accion" value="abonar">
+                    <input type="hidden" name="monto_abonado" id="montoAbonoInput">
+                    <button type="submit" class="btn btn-primary">Confirmar Abono</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const accionDeudaSelect = document.getElementById('accionDeuda');
+    const confirmModal = new bootstrap.Modal(document.getElementById('confirmModalDetalle'));
+    const abonoModal = new bootstrap.Modal(document.getElementById('abonoModal'));
+    const confirmModalBody = document.getElementById('confirmModalDetalleBody');
+    const actionForm = document.getElementById('actionFormDetalle');
+    const accionInput = document.getElementById('accionInputDetalle');
+    const abonoForm = document.getElementById('abonoForm');
+    const montoAbonoInput = document.getElementById('montoAbonoInput');
+    const abonoModalBody = document.getElementById('abonoModalBody');
+    const subtotalProducto = document.getElementById('subtotalProducto');
+    
+    if (accionDeudaSelect) {
+        accionDeudaSelect.addEventListener('change', function() {
+            const deudaId = this.getAttribute('data-deuda-id');
+            const tipo = this.getAttribute('data-tipo');
+            const saldoPendiente = this.getAttribute('data-saldo-pendiente');
+            const nuevaAccion = this.value;
+            
+            if (nuevaAccion === 'cancelar') {
+                // Mostrar modal de confirmación para cancelar toda la cuenta
+                confirmModalBody.textContent = `¿Está seguro de que desea CANCELAR toda la cuenta de {{ es_venta|yesno:"venta,fiado" }}?`;
+                accionInput.value = 'cancelar';
+                actionForm.action = `/clientes/productos-deuda/${tipo}/${deudaId}/`;
+                confirmModal.show();
+                
+                // Resetear el select después de la acción
+                confirmModal.addEventListener('hidden.bs.modal', function() {
+                    accionDeudaSelect.value = '';
+                }, { once: true });
+            } else if (nuevaAccion === 'abonar') {
+                // Mostrar modal de abono para toda la cuenta
+                abonoModalBody.textContent = `¿Cuánto desea abonar a la cuenta de {{ es_venta|yesno:"venta,fiado" }}?`;
+                subtotalProducto.textContent = parseFloat(saldoPendiente).toFixed(2);
+                accionInput.value = 'abonar';
+                abonoForm.action = `/clientes/productos-deuda/${tipo}/${deudaId}/`;
+                abonoModal.show();
+                
+                // Resetear el select después de la acción
+                abonoModal.addEventListener('hidden.bs.modal', function() {
+                    accionDeudaSelect.value = '';
+                }, { once: true });
+            }
+        });
+    }
+    
+    // Manejar envío del formulario de abono
+    document.getElementById('montoAbono').addEventListener('input', function() {
+        montoAbonoInput.value = this.value;
+    });
+    
+    // Limpiar modal de abono al cerrar
+    document.getElementById('abonoModal').addEventListener('hidden.bs.modal', function() {
+        document.getElementById('montoAbono').value = '';
+    });
+    
+    // Limpiar el evento cuando se confirma la acción
+    document.getElementById('actionFormDetalle').addEventListener('submit', function() {
+        confirmModal.removeEventListener('hidden.bs.modal', arguments.callee);
+    });
+    
+    // Limpiar el evento cuando se confirma el abono
+    document.getElementById('abonoForm').addEventListener('submit', function() {
+        abonoModal.removeEventListener('hidden.bs.modal', arguments.callee);
+    });
+});
+</script>
+{% endblock %} 

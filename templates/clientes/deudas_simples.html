@@ -1,0 +1,257 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load humanize %}
+{% load reportes_extras %}
+
+{% block title %}Deudas de {{ cliente.nombre }}{% endblock %}
+
+{% block page_title %}Deudas de {{ cliente.nombre }}{% endblock %}
+
+{% block extra_css %}
+<style>
+.estado-select {
+    min-width: 120px;
+    font-size: 0.875rem;
+}
+
+.estado-select.border-warning {
+    border-color: #ffc107 !important;
+    box-shadow: 0 0 0 0.2rem rgba(255, 193, 7, 0.25);
+}
+
+.estado-select.border-info {
+    border-color: #0dcaf0 !important;
+    box-shadow: 0 0 0 0.2rem rgba(13, 202, 240, 0.25);
+}
+
+.estado-select.border-danger {
+    border-color: #dc3545 !important;
+    box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
+}
+
+.estado-select option {
+    padding: 8px;
+}
+
+.estado-select option[value="pendiente"] {
+    background-color: #fff3cd;
+}
+
+.estado-select option[value="abonar"] {
+    background-color: #d1ecf1;
+}
+
+.estado-select option[value="cancelar"] {
+    background-color: #f8d7da;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <a href="{% url 'clientes:lista_clientes' %}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left me-2"></i>Volver a Clientes
+        </a>
+        <div class="d-flex gap-2">
+            <a href="{% url 'clientes:historial_abonos' cliente.id %}" class="btn btn-info">
+                <i class="fas fa-history me-2"></i>Historial de Abonos
+            </a>
+        </div>
+        <h4 class="mb-0">Cliente: {{ cliente.nombre }}</h4>
+    </div>
+
+    <!-- Resumen de Deudas -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                Pendientes
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">${{ total_pendiente|floatformat:2 }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-clock fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                Abonados
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">${{ total_abonado|floatformat:2 }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-hand-holding-usd fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-left-danger shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">
+                                Cancelados
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">${{ total_cancelado|floatformat:2 }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-times-circle fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                Total Deuda
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">${{ total_deuda|floatformat:2 }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-dollar-sign fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lista de Deudas -->
+    <div class="card shadow mb-4">
+        <div class="card-header bg-primary text-white py-3">
+            <h6 class="m-0 font-weight-bold">
+                <i class="fas fa-list me-2"></i>Lista de Deudas
+            </h6>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Fecha</th>
+                            <th>Tipo</th>
+                            <th>Monto Total</th>
+                            <th>Estado</th>
+                            <th class="text-center">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for deuda in deudas %}
+                        {% with tipo=deuda|class_name %}
+                        <tr class="{% if tipo == 'Venta' %}table-info{% elif deuda.pagado %}table-success{% else %}table-warning{% endif %}">
+                            <td>{{ deuda.fecha|date:"d/m/Y H:i" }}</td>
+                            <td>
+                                {% if tipo == 'Venta' %}
+                                    <span class="badge bg-info">Venta Fiada</span>
+                                {% else %}
+                                    <span class="badge bg-primary">Venta Fiada</span>
+                                {% endif %}
+                            </td>
+                            <td class="fw-bold">
+                                {% if tipo == 'Venta' %}
+                                    ${{ deuda.total|floatformat:2 }}
+                                {% else %}
+                                    ${{ deuda.monto|floatformat:2 }}
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if tipo == 'Venta' %}
+                                    <span class="badge bg-warning">Pendiente</span>
+                                {% elif deuda.pagado %}
+                                    <span class="badge bg-success">Pagado</span>
+                                {% else %}
+                                    <span class="badge bg-warning">Pendiente</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-center">
+                                {% if tipo == 'Venta' %}
+                                    <a href="{% url 'clientes:productos_deuda' 'venta' deuda.id %}" class="btn btn-info btn-sm">
+                                        <i class="fas fa-boxes me-1"></i>Ver Productos
+                                    </a>
+                                {% else %}
+                                    <a href="{% url 'clientes:productos_deuda' 'fiado' deuda.id %}" class="btn btn-info btn-sm">
+                                        <i class="fas fa-boxes me-1"></i>Ver Productos
+                                    </a>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endwith %}
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" class="text-center py-4">
+                                <i class="fas fa-exclamation-triangle fa-2x text-warning mb-2"></i>
+                                <p class="mb-0">No hay deudas registradas para este cliente.</p>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Manejar cambios de estado automáticamente
+    const estadoSelects = document.querySelectorAll('.estado-select');
+    estadoSelects.forEach(select => {
+        select.addEventListener('change', function() {
+            const valor = this.value;
+            const detalleId = this.getAttribute('data-detalle-id');
+            const tipo = this.getAttribute('data-tipo');
+            
+            if (valor === 'abonar') {
+                // Si selecciona abonar, enviar el formulario inmediatamente
+                this.closest('form').submit();
+            } else if (valor === 'cancelar') {
+                // Si selecciona cancelar, enviar el formulario inmediatamente
+                this.closest('form').submit();
+            }
+            // Si selecciona pendiente, no hacer nada (mantener el estado)
+        });
+    });
+    
+    // Aplicar estilos según el estado seleccionado
+    function aplicarEstilosSelect() {
+        estadoSelects.forEach(select => {
+            const valor = select.value;
+            select.className = 'form-select form-select-sm estado-select';
+            
+            if (valor === 'pendiente') {
+                select.classList.add('border-warning');
+            } else if (valor === 'abonar') {
+                select.classList.add('border-info');
+            } else if (valor === 'cancelar') {
+                select.classList.add('border-danger');
+            }
+        });
+    }
+    
+    // Aplicar estilos iniciales
+    aplicarEstilosSelect();
+    
+    // Aplicar estilos cuando cambie la selección
+    estadoSelects.forEach(select => {
+        select.addEventListener('change', aplicarEstilosSelect);
+    });
+});
+</script>
+{% endblock %} 

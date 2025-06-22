@@ -1,0 +1,249 @@
+{% extends 'base.html' %}
+
+{% block title %}Reporte de Clientes - TradeInventory{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Reporte de Clientes</h2>
+    
+    <!-- Filtros de fecha -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-4">
+                    <label for="fecha_inicio" class="form-label">Fecha Inicio</label>
+                    <input type="date" class="form-control" id="fecha_inicio" name="fecha_inicio" value="{{ fecha_inicio }}">
+                </div>
+                <div class="col-md-4">
+                    <label for="fecha_fin" class="form-label">Fecha Fin</label>
+                    <input type="date" class="form-control" id="fecha_fin" name="fecha_fin" value="{{ fecha_fin }}">
+                </div>
+                <div class="col-md-4 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary me-2">Filtrar</button>
+                    <a href="?formato=excel&fecha_inicio={{ fecha_inicio }}&fecha_fin={{ fecha_fin }}" class="btn btn-success">
+                        Exportar a Excel
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Resumen del Reporte -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="card-title">Total Clientes</h5>
+                    <h3 class="text-primary">{{ clientes_top|length }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="card-title">Total Compras</h5>
+                    <h3 class="text-success">
+                        {% if clientes_top %}
+                            {% for cliente in clientes_top %}
+                                {% if forloop.first %}
+                                    {{ cliente.total_compras }}
+                                {% endif %}
+                            {% endfor %}
+                        {% else %}
+                            0
+                        {% endif %}
+                    </h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="card-title">Valor Total</h5>
+                    <h3 class="text-info">
+                        {% if clientes_top %}
+                            ${{ clientes_top.0.total_gastado|floatformat:2 }}
+                        {% else %}
+                            $0.00
+                        {% endif %}
+                    </h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="card-title">Período</h5>
+                    <small>{{ fecha_inicio }} al {{ fecha_fin }}</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Clientes con Más Compras -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h4>Clientes con Más Compras</h4>
+        </div>
+        <div class="card-body">
+            {% if clientes_top %}
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Ranking</th>
+                            <th>Cliente</th>
+                            <th>Documento</th>
+                            <th>Total Compras</th>
+                            <th>Total Gastado</th>
+                            <th>Promedio por Compra</th>
+                            <th>Valor Promedio</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for cliente in clientes_top %}
+                        <tr>
+                            <td>
+                                <span class="badge {% if forloop.counter == 1 %}bg-warning{% elif forloop.counter == 2 %}bg-secondary{% elif forloop.counter == 3 %}bg-info{% else %}bg-light text-dark{% endif %}">
+                                    #{{ forloop.counter }}
+                                </span>
+                            </td>
+                            <td>
+                                <span class="fw-bold">{{ cliente.cliente__nombre }}</span>
+                            </td>
+                            <td>
+                                <span class="text-muted">{{ cliente.cliente__documento }}</span>
+                            </td>
+                            <td>
+                                <span class="badge bg-primary">{{ cliente.total_compras }}</span>
+                            </td>
+                            <td>
+                                <span class="text-success fw-bold">${{ cliente.total_gastado|floatformat:2 }}</span>
+                            </td>
+                            <td>
+                                <span class="text-info">${{ cliente.promedio_compra|floatformat:2 }}</span>
+                            </td>
+                            <td>
+                                {% if cliente.total_compras > 0 %}
+                                    <span class="badge {% if cliente.promedio_compra > 100 %}bg-success{% elif cliente.promedio_compra > 50 %}bg-warning{% else %}bg-info{% endif %}">
+                                        {% if cliente.promedio_compra > 100 %}Alto
+                                        {% elif cliente.promedio_compra > 50 %}Medio
+                                        {% else %}Bajo
+                                        {% endif %}
+                                    </span>
+                                {% else %}
+                                    <span class="badge bg-secondary">N/A</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle"></i> No hay datos de compras para el período seleccionado.
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Análisis de Segmentación -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Clientes por Valor de Compra</h5>
+                </div>
+                <div class="card-body">
+                    {% if clientes_top %}
+                    <div class="row text-center">
+                        <div class="col-4">
+                            <div class="border rounded p-3">
+                                <h4 class="text-success">{{ clientes_top|length }}</h4>
+                                <small>Total Clientes</small>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="border rounded p-3">
+                                <h4 class="text-warning">
+                                    {% for cliente in clientes_top %}
+                                        {% if cliente.promedio_compra > 100 %}
+                                            {% if forloop.first %}1{% endif %}
+                                        {% endif %}
+                                    {% endfor %}
+                                </h4>
+                                <small>Alto Valor (>$100)</small>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="border rounded p-3">
+                                <h4 class="text-info">
+                                    {% for cliente in clientes_top %}
+                                        {% if cliente.promedio_compra <= 100 and cliente.promedio_compra > 50 %}
+                                            {% if forloop.first %}1{% endif %}
+                                        {% endif %}
+                                    {% endfor %}
+                                </h4>
+                                <small>Medio Valor ($50-$100)</small>
+                            </div>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="alert alert-info">
+                        No hay datos para mostrar.
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Resumen de Actividad</h5>
+                </div>
+                <div class="card-body">
+                    {% if clientes_top %}
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            Cliente con más compras
+                            <span class="badge bg-primary rounded-pill">
+                                {% if clientes_top %}
+                                    {{ clientes_top.0.cliente__nombre|truncatechars:20 }}
+                                {% else %}
+                                    N/A
+                                {% endif %}
+                            </span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            Mayor gasto total
+                            <span class="badge bg-success rounded-pill">
+                                {% if clientes_top %}
+                                    ${{ clientes_top.0.total_gastado|floatformat:2 }}
+                                {% else %}
+                                    $0.00
+                                {% endif %}
+                            </span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            Promedio más alto
+                            <span class="badge bg-warning rounded-pill">
+                                {% if clientes_top %}
+                                    ${{ clientes_top.0.promedio_compra|floatformat:2 }}
+                                {% else %}
+                                    $0.00
+                                {% endif %}
+                            </span>
+                        </li>
+                    </ul>
+                    {% else %}
+                    <div class="alert alert-info">
+                        No hay datos para mostrar.
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

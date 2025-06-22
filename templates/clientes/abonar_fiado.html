@@ -1,0 +1,103 @@
+{% extends 'base.html' %}
+
+{% block title %}Abonar Fiado - {{ detalle.producto.nombre }}{% endblock %}
+
+{% block page_title %}Abonar Fiado{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <a href="{% url 'clientes:detalle_fiado_cliente' detalle.fiado.id %}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left me-2"></i>Volver al Detalle
+        </a>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="fas fa-dollar-sign me-2"></i>Abonar Fiado
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <strong>Cliente:</strong>
+                            <p>{{ detalle.fiado.cliente.nombre }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Producto:</strong>
+                            <p>{{ detalle.producto.nombre }}</p>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <strong>Cantidad:</strong>
+                            <p>{{ detalle.cantidad }}</p>
+                        </div>
+                        <div class="col-md-4">
+                            <strong>Precio Unitario:</strong>
+                            <p>${{ detalle.precio_unitario|floatformat:2 }}</p>
+                        </div>
+                        <div class="col-md-4">
+                            <strong>Total:</strong>
+                            <p class="fw-bold text-primary">${{ detalle.subtotal|floatformat:2 }}</p>
+                        </div>
+                    </div>
+
+                    <form method="post" action="{% url 'clientes:cambiar_estado_detalle_fiado' detalle.id %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="accion" value="abonar">
+                        
+                        <div class="mb-3">
+                            <label for="monto_abonado" class="form-label">
+                                <strong>Monto a Abonar:</strong>
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text">$</span>
+                                <input type="number" 
+                                       class="form-control" 
+                                       id="monto_abonado" 
+                                       name="monto_abonado" 
+                                       step="0.01" 
+                                       min="0.01" 
+                                       max="{{ detalle.subtotal }}"
+                                       value="{{ detalle.subtotal }}"
+                                       required>
+                            </div>
+                            <div class="form-text">
+                                Monto máximo: ${{ detalle.subtotal|floatformat:2 }}
+                            </div>
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-check me-2"></i>Confirmar Abono
+                            </button>
+                            <a href="{% url 'clientes:detalle_fiado_cliente' detalle.fiado.id %}" class="btn btn-secondary">
+                                <i class="fas fa-times me-2"></i>Cancelar
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const montoInput = document.getElementById('monto_abonado');
+    const maxMonto = {{ detalle.subtotal }};
+    
+    montoInput.addEventListener('input', function() {
+        const valor = parseFloat(this.value);
+        if (valor > maxMonto) {
+            this.value = maxMonto;
+        }
+    });
+});
+</script>
+{% endblock %} 

@@ -1,0 +1,328 @@
+{% extends 'base.html' %}
+
+{% block title %}Reporte de Fiados - TradeInventory{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Reporte de Fiados</h2>
+    
+    <!-- Filtros de fecha -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-4">
+                    <label for="fecha_inicio" class="form-label">Fecha Inicio</label>
+                    <input type="date" class="form-control" id="fecha_inicio" name="fecha_inicio" value="{{ fecha_inicio|date:'Y-m-d' }}">
+                </div>
+                <div class="col-md-4">
+                    <label for="fecha_fin" class="form-label">Fecha Fin</label>
+                    <input type="date" class="form-control" id="fecha_fin" name="fecha_fin" value="{{ fecha_fin|date:'Y-m-d' }}">
+                </div>
+                <div class="col-md-4 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary me-2">Filtrar</button>
+                    <a href="?formato=excel&fecha_inicio={{ fecha_inicio|date:'Y-m-d' }}&fecha_fin={{ fecha_fin|date:'Y-m-d' }}" class="btn btn-success">
+                        Exportar a Excel
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Resumen del Reporte -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="card-title">Total Fiado Pendiente</h5>
+                    <h3 class="text-danger">${{ total_fiado_pendiente|floatformat:2 }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="card-title">Clientes con Fiados</h5>
+                    <h3 class="text-warning">{{ total_clientes_fiados }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="card-title">Fiados Pendientes</h5>
+                    <h3 class="text-info">{{ fiados_pendientes|length }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="card-title">Período</h5>
+                    <small>{{ fecha_inicio|date:"d/m/Y" }} al {{ fecha_fin|date:"d/m/Y" }}</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Fiados Pendientes -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h4>Fiados Pendientes</h4>
+        </div>
+        <div class="card-body">
+            {% if fiados_pendientes %}
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Cliente</th>
+                            <th>Fecha</th>
+                            <th>Monto</th>
+                            <th>Descripción</th>
+                            <th>Días Vencido</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for fiado in fiados_pendientes %}
+                        <tr>
+                            <td>
+                                <span class="fw-bold">{{ fiado.cliente.nombre }}</span>
+                                {% if fiado.cliente.documento %}
+                                    <br><small class="text-muted">{{ fiado.cliente.documento }}</small>
+                                {% endif %}
+                            </td>
+                            <td>{{ fiado.fecha|date:"d/m/Y" }}</td>
+                            <td>
+                                <span class="text-danger fw-bold">${{ fiado.monto|floatformat:2 }}</span>
+                            </td>
+                            <td>Fiado #{{ fiado.id }}</td>
+                            <td>
+                                {% if fiado.dias_vencido > 30 %}
+                                    <span class="badge bg-danger">{{ fiado.dias_vencido }} días</span>
+                                {% elif fiado.dias_vencido > 15 %}
+                                    <span class="badge bg-warning">{{ fiado.dias_vencido }} días</span>
+                                {% else %}
+                                    <span class="badge bg-success">{{ fiado.dias_vencido }} días</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="btn-group" role="group">
+                                    <a href="{% url 'reportes:detalle_fiado' fiado.id %}" 
+                                       class="btn btn-info btn-sm" title="Ver detalles">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    <button type="button" class="btn btn-success btn-sm btn-action" 
+                                            data-fiado-id="{{ fiado.id }}" 
+                                            data-accion="pagar" 
+                                            data-cliente-nombre="{{ fiado.cliente.nombre }}">
+                                        <i class="fas fa-check"></i> Pagar
+                                    </button>
+                                    <button type="button" class="btn btn-danger btn-sm btn-action ms-1"
+                                            data-fiado-id="{{ fiado.id }}" 
+                                            data-accion="cancelar" 
+                                            data-cliente-nombre="{{ fiado.cliente.nombre }}">
+                                        <i class="fas fa-times"></i> Cancelar
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-center">No hay fiados pendientes en el período seleccionado</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="alert alert-success">
+                <i class="fas fa-check-circle"></i> ¡Excelente! No hay fiados pendientes en el período seleccionado.
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Resumen por Cliente y Análisis -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Resumen por Cliente</h5>
+                </div>
+                <div class="card-body">
+                    {% if clientes_fiados %}
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Cliente</th>
+                                    <th>Total Fiado</th>
+                                    <th>Cantidad</th>
+                                    <th>Promedio</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for cliente in clientes_fiados %}
+                                <tr>
+                                    <td>{{ cliente.nombre }}</td>
+                                    <td>${{ cliente.total_fiado|floatformat:2 }}</td>
+                                    <td>{{ cliente.cantidad_fiados }}</td>
+                                    <td>${{ cliente.promedio_fiado|floatformat:2 }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="alert alert-info">
+                        No hay clientes con fiados pendientes.
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Análisis por Antigüedad</h5>
+                </div>
+                <div class="card-body">
+                    {% if fiados_antiguedad %}
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Días Vencido</th>
+                                    <th>Cantidad</th>
+                                    <th>Monto Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for antiguedad in fiados_antiguedad %}
+                                <tr>
+                                    <td>{{ antiguedad.dias_vencido }}</td>
+                                    <td>{{ antiguedad.cantidad }}</td>
+                                    <td>${{ antiguedad.monto_total|floatformat:2 }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="alert alert-info">
+                        No hay datos de antigüedad disponibles.
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Productos más Fiados -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h4>Productos más Fiados</h4>
+        </div>
+        <div class="card-body">
+            {% if productos_fiados %}
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Producto</th>
+                            <th>Categoría</th>
+                            <th>Total Cantidad</th>
+                            <th>Total Valor</th>
+                            <th>Cantidad Fiados</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for producto in productos_fiados %}
+                        <tr>
+                            <td>{{ producto.producto__nombre }}</td>
+                            <td>{{ producto.producto__categoria__nombre|default:"Sin categoría" }}</td>
+                            <td>{{ producto.total_cantidad }}</td>
+                            <td>${{ producto.total_valor|floatformat:2 }}</td>
+                            <td>{{ producto.cantidad_fiados }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="alert alert-info">
+                No hay productos fiados en el período seleccionado.
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Confirmación -->
+<div class="modal fade" id="confirmModal" tabindex="-1" aria-labelledby="confirmModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="confirmModalLabel">Confirmar Acción</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="confirmModalBody">
+                ¿Está seguro de que desea realizar esta acción?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <form id="confirmForm" method="post" style="display: inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-primary" id="confirmButton">Confirmar</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Manejar clics en botones de acción
+    document.querySelectorAll('.btn-action').forEach(button => {
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
+            
+            const fiadoId = this.getAttribute('data-fiado-id');
+            const accion = this.getAttribute('data-accion');
+            const clienteNombre = this.getAttribute('data-cliente-nombre');
+            
+            // Configurar el modal
+            const modal = document.getElementById('confirmModal');
+            const modalBody = document.getElementById('confirmModalBody');
+            const confirmForm = document.getElementById('confirmForm');
+            const confirmButton = document.getElementById('confirmButton');
+            
+            if (accion === 'pagar') {
+                modalBody.textContent = `¿Confirmar pago del fiado #${fiadoId} de ${clienteNombre}?`;
+                confirmButton.className = 'btn btn-success';
+                confirmButton.innerHTML = '<i class="fas fa-check"></i> Confirmar Pago';
+            } else if (accion === 'cancelar') {
+                modalBody.textContent = `¿Confirmar cancelación del fiado #${fiadoId} de ${clienteNombre}?`;
+                confirmButton.className = 'btn btn-danger';
+                confirmButton.innerHTML = '<i class="fas fa-times"></i> Confirmar Cancelación';
+            }
+            
+            // Configurar el formulario
+            confirmForm.action = `/reportes/fiados/${fiadoId}/cambiar-estado/`;
+            confirmForm.innerHTML = `
+                {% csrf_token %}
+                <input type="hidden" name="accion" value="${accion}">
+                <button type="submit" class="btn btn-primary" id="confirmButton">Confirmar</button>
+            `;
+            
+            // Mostrar el modal
+            const bootstrapModal = new bootstrap.Modal(modal);
+            bootstrapModal.show();
+        });
+    });
+});
+</script>
+
+{% endblock %} 

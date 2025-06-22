@@ -1,0 +1,140 @@
+{% extends 'base.html' %}
+
+{% block title %}{% if form.instance.pk %}Editar{% else %}Crear{% endif %} Proveedor - TradeInventory{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0 text-gray-800">
+            <i class="fas fa-truck me-2"></i>
+            {% if form.instance.pk %}Editar{% else %}Crear{% endif %} Proveedor
+        </h1>
+        <a href="{% url 'proveedores:lista_proveedores' %}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left me-2"></i>Volver
+        </a>
+    </div>
+
+    <!-- Formulario -->
+    <div class="card shadow mb-4">
+        <div class="card-body">
+            <form method="post" class="needs-validation" novalidate>
+                {% csrf_token %}
+                
+                <div class="row g-3">
+                    <!-- Información Principal -->
+                    <div class="col-12">
+                        <h5 class="mb-3 text-primary">
+                            <i class="fas fa-info-circle me-2"></i>Información Principal
+                        </h5>
+                    </div>
+                    
+                    <!-- Nombre -->
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="{{ form.nombre.id_for_label }}" class="form-label">
+                                {{ form.nombre.label }}
+                            </label>
+                            {{ form.nombre }}
+                            {% if form.nombre.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.nombre.errors }}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Teléfono -->
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="{{ form.telefono.id_for_label }}" class="form-label">
+                                {{ form.telefono.label }}
+                            </label>
+                            {{ form.telefono }}
+                            {% if form.telefono.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.telefono.errors }}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Información de Contacto -->
+                    <div class="col-12">
+                        <h5 class="mb-3 text-primary">
+                            <i class="fas fa-address-card me-2"></i>Información de Contacto
+                        </h5>
+                    </div>
+
+                    <!-- Email -->
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="{{ form.email.id_for_label }}" class="form-label">
+                                {{ form.email.label }}
+                            </label>
+                            {{ form.email }}
+                            {% if form.email.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.email.errors }}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Dirección -->
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="{{ form.direccion.id_for_label }}" class="form-label">
+                                {{ form.direccion.label }}
+                            </label>
+                            {{ form.direccion }}
+                            {% if form.direccion.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.direccion.errors }}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Estado -->
+                    <div class="col-12">
+                        <h5 class="mb-3 text-primary">
+                            <i class="fas fa-toggle-on me-2"></i>Estado del Proveedor
+                        </h5>
+                        <div class="form-check form-switch">
+                            {{ form.activo }}
+                            <label class="form-check-label" for="{{ form.activo.id_for_label }}">
+                                {{ form.activo.label }}
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Botones de acción -->
+                <div class="d-flex justify-content-end gap-2 mt-4">
+                    <a href="{% url 'proveedores:lista_proveedores' %}" class="btn btn-secondary">
+                        <i class="fas fa-times me-2"></i>Cancelar
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save me-2"></i>Guardar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+    // Aplicar clases de Bootstrap a los campos del formulario
+    document.addEventListener('DOMContentLoaded', function() {
+        const formControls = document.querySelectorAll('input[type="text"], input[type="email"], textarea');
+        formControls.forEach(control => {
+            if (!control.classList.contains('form-control')) {
+                control.classList.add('form-control');
+            }
+        });
+    });
+</script>
+{% endblock %}
+{% endblock %} 

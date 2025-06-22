@@ -1,0 +1,272 @@
+{% extends 'base.html' %}
+
+{% block title %}Reporte de Proveedores - TradeInventory{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Reporte de Proveedores</h2>
+    
+    <!-- Filtros de fecha -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-4">
+                    <label for="fecha_inicio" class="form-label">Fecha Inicio</label>
+                    <input type="date" class="form-control" id="fecha_inicio" name="fecha_inicio" value="{{ fecha_inicio }}">
+                </div>
+                <div class="col-md-4">
+                    <label for="fecha_fin" class="form-label">Fecha Fin</label>
+                    <input type="date" class="form-control" id="fecha_fin" name="fecha_fin" value="{{ fecha_fin }}">
+                </div>
+                <div class="col-md-4 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary me-2">Filtrar</button>
+                    <a href="?formato=excel&fecha_inicio={{ fecha_inicio }}&fecha_fin={{ fecha_fin }}" class="btn btn-success">
+                        Exportar a Excel
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Resumen del Reporte -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="card-title">Total Proveedores</h5>
+                    <h3 class="text-primary">{{ proveedores_analisis|length }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="card-title">Total Productos</h5>
+                    <h3 class="text-success">
+                        {% if productos_por_proveedor %}
+                            {% for proveedor in productos_por_proveedor %}
+                                {% if forloop.first %}
+                                    {{ proveedor.cantidad_productos }}
+                                {% endif %}
+                            {% endfor %}
+                        {% else %}
+                            0
+                        {% endif %}
+                    </h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="card-title">Valor Total</h5>
+                    <h3 class="text-info">
+                        {% if proveedores_analisis %}
+                            ${{ proveedores_analisis.0.total_ingresos|floatformat:2 }}
+                        {% else %}
+                            $0.00
+                        {% endif %}
+                    </h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="card-title">Período</h5>
+                    <small>{{ fecha_inicio }} al {{ fecha_fin }}</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Análisis de Proveedores -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h4>Análisis de Proveedores por Productos Vendidos</h4>
+        </div>
+        <div class="card-body">
+            {% if proveedores_analisis %}
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Ranking</th>
+                            <th>Proveedor</th>
+                            <th>ID</th>
+                            <th>Total Productos</th>
+                            <th>Total Vendido</th>
+                            <th>Total Ingresos</th>
+                            <th>Costo Total</th>
+                            <th>Margen de Ganancia</th>
+                            <th>% Margen</th>
+                            <th>Última Venta</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for proveedor in proveedores_analisis %}
+                        <tr>
+                            <td>
+                                <span class="badge {% if forloop.counter == 1 %}bg-warning{% elif forloop.counter == 2 %}bg-secondary{% elif forloop.counter == 3 %}bg-info{% else %}bg-light text-dark{% endif %}">
+                                    #{{ forloop.counter }}
+                                </span>
+                            </td>
+                            <td>
+                                <span class="fw-bold">{{ proveedor.proveedor__nombre }}</span>
+                            </td>
+                            <td>
+                                <span class="text-muted">{{ proveedor.proveedor__id }}</span>
+                            </td>
+                            <td>
+                                <span class="badge bg-primary">{{ proveedor.total_productos }}</span>
+                            </td>
+                            <td>
+                                <span class="text-success fw-bold">{{ proveedor.total_vendido }}</span>
+                            </td>
+                            <td>
+                                <span class="text-info">${{ proveedor.total_ingresos|floatformat:2 }}</span>
+                            </td>
+                            <td>
+                                <span class="text-danger">${{ proveedor.costo_total|floatformat:2 }}</span>
+                            </td>
+                            <td>
+                                <span class="badge {% if proveedor.margen_ganancia > 100 %}bg-success{% elif proveedor.margen_ganancia > 50 %}bg-warning{% else %}bg-info{% endif %}">
+                                    ${{ proveedor.margen_ganancia|floatformat:2 }}
+                                </span>
+                            </td>
+                            <td>
+                                <span class="badge {% if proveedor.porcentaje_margen > 30 %}bg-success{% elif proveedor.porcentaje_margen > 15 %}bg-warning{% else %}bg-info{% endif %}">
+                                    {{ proveedor.porcentaje_margen|floatformat:1 }}%
+                                </span>
+                            </td>
+                            <td>
+                                <small class="text-muted">
+                                    {% if proveedor.ultima_venta %}
+                                        {{ proveedor.ultima_venta|date:"d/m/Y" }}
+                                    {% else %}
+                                        Sin ventas
+                                    {% endif %}
+                                </small>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle"></i> No hay datos de proveedores para el período seleccionado.
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Productos por Proveedor -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Inventario por Proveedor</h5>
+                </div>
+                <div class="card-body">
+                    {% if productos_por_proveedor %}
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Proveedor</th>
+                                    <th>Cantidad</th>
+                                    <th>Stock Total</th>
+                                    <th>Valor Inventario</th>
+                                    <th>Bajo Stock</th>
+                                    <th>Sin Stock</th>
+                                    <th>Última Venta</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for proveedor in productos_por_proveedor %}
+                                <tr>
+                                    <td>{{ proveedor.proveedor__nombre }}</td>
+                                    <td>{{ proveedor.cantidad_productos }}</td>
+                                    <td>{{ proveedor.stock_total }}</td>
+                                    <td>${{ proveedor.valor_inventario|floatformat:2 }}</td>
+                                    <td>
+                                        {% if proveedor.productos_bajo_stock > 0 %}
+                                            <span class="badge bg-warning">{{ proveedor.productos_bajo_stock }}</span>
+                                        {% else %}
+                                            <span class="badge bg-success">0</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if proveedor.productos_sin_stock > 0 %}
+                                            <span class="badge bg-danger">{{ proveedor.productos_sin_stock }}</span>
+                                        {% else %}
+                                            <span class="badge bg-success">0</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <small class="text-muted">
+                                            {% if proveedor.ultima_venta %}
+                                                {{ proveedor.ultima_venta|date:"d/m/Y" }}
+                                            {% else %}
+                                                Sin ventas
+                                            {% endif %}
+                                        </small>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="alert alert-info">
+                        No hay datos para mostrar.
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Proveedores con Mejor Margen</h5>
+                </div>
+                <div class="card-body">
+                    {% if proveedores_margen %}
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Proveedor</th>
+                                    <th>Margen Promedio</th>
+                                    <th>Total Ventas</th>
+                                    <th>Ingresos Totales</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for proveedor in proveedores_margen %}
+                                <tr>
+                                    <td>{{ proveedor.proveedor__nombre }}</td>
+                                    <td>
+                                        <span class="badge {% if proveedor.margen_promedio > 30 %}bg-success{% elif proveedor.margen_promedio > 20 %}bg-warning{% else %}bg-info{% endif %}">
+                                            {{ proveedor.margen_promedio|floatformat:1 }}%
+                                        </span>
+                                    </td>
+                                    <td>{{ proveedor.total_ventas }}</td>
+                                    <td>${{ proveedor.ingresos_totales|floatformat:2 }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="alert alert-info">
+                        No hay datos para mostrar.
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

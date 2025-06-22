@@ -1,0 +1,194 @@
+{% extends 'base.html' %}
+
+{% block title %}Reporte de Productos - TradeInventory{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Reporte de Productos</h2>
+    
+    <!-- Filtros de fecha -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-4">
+                    <label for="fecha_inicio" class="form-label">Fecha Inicio</label>
+                    <input type="date" class="form-control" id="fecha_inicio" name="fecha_inicio" value="{{ fecha_inicio }}">
+                </div>
+                <div class="col-md-4">
+                    <label for="fecha_fin" class="form-label">Fecha Fin</label>
+                    <input type="date" class="form-control" id="fecha_fin" name="fecha_fin" value="{{ fecha_fin }}">
+                </div>
+                <div class="col-md-4 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary me-2">Filtrar</button>
+                    <a href="?formato=excel&fecha_inicio={{ fecha_inicio }}&fecha_fin={{ fecha_fin }}" class="btn btn-success">
+                        Exportar a Excel
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Resumen del Reporte -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="card-title">Total Productos</h5>
+                    <h3 class="text-primary">{{ productos_bajo_stock.count|add:productos_rotacion.count }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="card-title">Stock Bajo</h5>
+                    <h3 class="text-warning">{{ productos_bajo_stock.count }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="card-title">Más Vendidos</h5>
+                    <h3 class="text-success">{{ productos_mas_vendidos.count }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="card-title">Período</h5>
+                    <small>{{ fecha_inicio }} al {{ fecha_fin }}</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Productos con Stock Bajo -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h4>Productos con Stock Bajo</h4>
+        </div>
+        <div class="card-body">
+            {% if productos_bajo_stock %}
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Nombre</th>
+                            <th>Categoría</th>
+                            <th>Stock Actual</th>
+                            <th>Stock Mínimo</th>
+                            <th>Estado</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for producto in productos_bajo_stock %}
+                        <tr>
+                            <td>{{ producto.nombre }}</td>
+                            <td>{{ producto.categoria.nombre }}</td>
+                            <td>
+                                <span class="badge {% if producto.stock_actual == 0 %}bg-danger{% else %}bg-warning{% endif %}">
+                                    {{ producto.stock_actual }}
+                                </span>
+                            </td>
+                            <td>{{ producto.stock_minimo }}</td>
+                            <td>
+                                {% if producto.stock_actual == 0 %}
+                                    <span class="badge bg-danger">CRÍTICO</span>
+                                {% else %}
+                                    <span class="badge bg-warning">BAJO</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="alert alert-success">
+                <i class="fas fa-check-circle"></i> ¡Excelente! No hay productos con stock bajo en este momento.
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Productos Más Vendidos -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h4>Productos Más Vendidos</h4>
+        </div>
+        <div class="card-body">
+            {% if productos_mas_vendidos %}
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Nombre</th>
+                            <th>ID</th>
+                            <th>Categoría</th>
+                            <th>Total Vendido</th>
+                            <th>Total Ingresos</th>
+                            <th>Precio Promedio</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for producto in productos_mas_vendidos %}
+                        <tr>
+                            <td>{{ producto.producto__nombre }}</td>
+                            <td>{{ producto.producto__id }}</td>
+                            <td>{{ producto.producto__categoria__nombre }}</td>
+                            <td>{{ producto.total_vendido }}</td>
+                            <td>${{ producto.total_ingresos|floatformat:2 }}</td>
+                            <td>${{ producto.precio_promedio|floatformat:2 }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle"></i> No hay datos de ventas para el período seleccionado.
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Rotación de Inventario -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h4>Rotación de Inventario</h4>
+        </div>
+        <div class="card-body">
+            {% if productos_rotacion %}
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Producto</th>
+                            <th>Ventas Totales</th>
+                            <th>Stock Actual</th>
+                            <th>Valor en Inventario</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for producto in productos_rotacion %}
+                        <tr>
+                            <td>{{ producto.nombre }}</td>
+                            <td>{{ producto.ventas_totales|default:0 }}</td>
+                            <td>{{ producto.stock_actual }}</td>
+                            <td>${{ producto.valor_inventario|floatformat:2 }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle"></i> No hay datos de rotación de inventario disponibles.
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %} 

@@ -1,0 +1,102 @@
+{% extends 'base.html' %}
+
+{% block title %}Detalle de Venta - TradeInventory{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-0 text-gray-800">
+                <i class="fas fa-shopping-cart me-2"></i>Detalle de Venta #{{ venta.id }}
+            </h1>
+            <p class="text-muted mb-0">{{ venta.fecha|date:"d/m/Y H:i" }}</p>
+        </div>
+        <a href="{% url 'ventas:lista_ventas' %}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left me-2"></i>Volver
+        </a>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <!-- Detalles de la Venta -->
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Información de la Venta</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <h5>Cliente</h5>
+                            <p>{{ venta.cliente.nombre|default:"Cliente General" }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <h5>Estado</h5>
+                            <p>
+                                {% if venta.pagado %}
+                                <span class="badge bg-success">Pagado</span>
+                                {% else %}
+                                <span class="badge bg-warning">Pendiente</span>
+                                {% endif %}
+                            </p>
+                        </div>
+                    </div>
+
+                    <h5 class="mb-3">Productos</h5>
+                    <div class="table-responsive">
+                        <table class="table table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>Producto</th>
+                                    <th>Cantidad</th>
+                                    <th>Precio Unitario</th>
+                                    <th>Subtotal</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for detalle in detalles %}
+                                <tr>
+                                    <td>{{ detalle.producto.nombre }}</td>
+                                    <td>{{ detalle.cantidad }}</td>
+                                    <td>${{ detalle.precio_unitario|floatformat:2 }}</td>
+                                    <td>${{ detalle.subtotal|floatformat:2 }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                            <tfoot>
+                                <tr>
+                                    <th colspan="3" class="text-end">Total:</th>
+                                    <th>${{ venta.total|floatformat:2 }}</th>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <!-- Resumen -->
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Resumen</h6>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <h5>Fecha de Venta</h5>
+                        <p>{{ venta.fecha|date:"d/m/Y H:i" }}</p>
+                    </div>
+                    <div class="mb-3">
+                        <h5>Total de Productos</h5>
+                        <p>{{ detalles.count }}</p>
+                    </div>
+                    <div class="mb-3">
+                        <h5>Total de la Venta</h5>
+                        <h3 class="text-primary">${{ venta.total|floatformat:2 }}</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

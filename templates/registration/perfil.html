@@ -1,0 +1,809 @@
+{% extends 'base.html' %}
+
+{% block title %}Perfil de Usuario - TradeInventory{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header con breadcrumb -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'home' %}">Inicio</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Mi Perfil</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Columna izquierda - Información del usuario -->
+        <div class="col-lg-4">
+            <!-- Tarjeta principal del usuario -->
+            <div class="card shadow-lg border-0 mb-4">
+                <div class="card-header bg-gradient-primary text-white text-center py-4">
+                    <div class="avatar-container mb-3">
+                        <div class="avatar-circle">
+                            <i class="fas fa-user-circle fa-4x text-white"></i>
+                        </div>
+                        <div class="status-indicator {% if user.is_active %}active{% else %}inactive{% endif %}"></div>
+                    </div>
+                    <h4 class="mb-1">{{ user.get_full_name|default:user.username }}</h4>
+                    <p class="mb-0 opacity-75">{{ user.email }}</p>
+                </div>
+                <div class="card-body p-4">
+                    <div class="user-stats mb-4">
+                        <div class="row text-center">
+                            <div class="col-6">
+                                <div class="stat-item">
+                                    <h5 class="text-primary mb-1">{{ user.date_joined|date:"d" }}</h5>
+                                    <small class="text-muted">{{ user.date_joined|date:"M Y" }}</small>
+                                    <p class="mb-0 small">Miembro desde</p>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="stat-item">
+                                    <h5 class="text-success mb-1">{{ user.last_login|date:"d" }}</h5>
+                                    <small class="text-muted">{{ user.last_login|date:"M Y" }}</small>
+                                    <p class="mb-0 small">Último acceso</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="user-info">
+                        <div class="info-item mb-3">
+                            <div class="d-flex align-items-center">
+                                <div class="icon-wrapper bg-primary-light">
+                                    <i class="fas fa-user text-primary"></i>
+                                </div>
+                                <div class="ms-3">
+                                    <h6 class="mb-0">Nombre de Usuario</h6>
+                                    <p class="text-muted mb-0">{{ user.username }}</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="info-item mb-3">
+                            <div class="d-flex align-items-center">
+                                <div class="icon-wrapper bg-success-light">
+                                    <i class="fas fa-envelope text-success"></i>
+                                </div>
+                                <div class="ms-3">
+                                    <h6 class="mb-0">Correo Electrónico</h6>
+                                    <p class="text-muted mb-0">{{ user.email }}</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="info-item mb-3">
+                            <div class="d-flex align-items-center">
+                                <div class="icon-wrapper bg-info-light">
+                                    <i class="fas fa-shield-alt text-info"></i>
+                                </div>
+                                <div class="ms-3">
+                                    <h6 class="mb-0">Nivel de Acceso</h6>
+                                    {% if user.is_superuser %}
+                                        <span class="badge bg-danger">Administrador</span>
+                                    {% elif user.is_staff %}
+                                        <span class="badge bg-primary">Staff</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">Usuario</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="info-item">
+                            <div class="d-flex align-items-center">
+                                <div class="icon-wrapper {% if user.is_active %}bg-success-light{% else %}bg-danger-light{% endif %}">
+                                    <i class="fas fa-circle text-{% if user.is_active %}success{% else %}danger{% endif %}"></i>
+                                </div>
+                                <div class="ms-3">
+                                    <h6 class="mb-0">Estado de la Cuenta</h6>
+                                    {% if user.is_active %}
+                                        <span class="badge bg-success">Activa</span>
+                                    {% else %}
+                                        <span class="badge bg-danger">Inactiva</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tarjeta de estadísticas rápidas -->
+            <div class="card shadow border-0 mb-4">
+                <div class="card-header bg-white py-3">
+                    <h6 class="m-0 font-weight-bold text-white fs-5">
+                        <i class="fas fa-chart-bar me-2 text-warning"></i>Estadísticas Rápidas
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="quick-stats">
+                        <div class="stat-card mb-3">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="mb-1">Sesiones Activas</h6>
+                                    <p class="text-muted mb-0 small">Últimos 30 días</p>
+                                </div>
+                                <div class="stat-value">
+                                    <span class="badge bg-primary">1</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="stat-card mb-3">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="mb-1">Actividad Reciente</h6>
+                                    <p class="text-muted mb-0 small">Última actividad</p>
+                                </div>
+                                <div class="stat-value">
+                                    <span class="text-success">
+                                        <i class="fas fa-circle"></i>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="stat-card">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="mb-1">Seguridad</h6>
+                                    <p class="text-muted mb-0 small">Nivel de seguridad</p>
+                                </div>
+                                <div class="stat-value">
+                                    <span class="badge bg-success">Alto</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Columna derecha - Formularios y acciones -->
+        <div class="col-lg-8">
+            <!-- Formulario de cambio de contraseña -->
+            <div class="card shadow border-0 mb-4 password-card">
+                <div class="card-header bg-white py-3 password-card-header" style="cursor: pointer;">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h6 class="m-0 font-weight-bold text-white fs-5">
+                            <i class="fas fa-key me-2 text-warning"></i>Cambiar Contraseña
+                        </h6>
+                        <i class="fas fa-chevron-down text-warning password-toggle-icon"></i>
+                    </div>
+                </div>
+                <div class="card-body p-4 password-card-content" style="display: none;">
+                    <form method="post" class="needs-validation" novalidate>
+                        {% csrf_token %}
+                        
+                        {% if form.errors %}
+                            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                                <div class="d-flex align-items-center">
+                                    <i class="fas fa-exclamation-triangle me-2"></i>
+                                    <div>
+                                        <strong>Error:</strong> Por favor corrige los siguientes errores:
+                                        <ul class="mb-0 mt-2">
+                                            {% for field in form %}
+                                                {% for error in field.errors %}
+                                                    <li>{{ error }}</li>
+                                                {% endfor %}
+                                            {% endfor %}
+                                            {% for error in form.non_field_errors %}
+                                                <li>{{ error }}</li>
+                                            {% endfor %}
+                                        </ul>
+                                    </div>
+                                </div>
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>
+                        {% endif %}
+                        
+                        <!-- Contraseña Actual -->
+                        <div class="mb-4">
+                            <label for="{{ form.old_password.id_for_label }}" class="form-label fw-bold">
+                                <i class="fas fa-lock me-2 text-primary"></i>Contraseña Actual
+                            </label>
+                            <div class="input-group password-field-container">
+                                <span class="input-group-text bg-light">
+                                    <i class="fas fa-shield-alt text-muted"></i>
+                                </span>
+                                {{ form.old_password }}
+                                <button class="btn btn-outline-secondary" type="button" id="toggleCurrentPassword">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                            <div class="form-text">
+                                <i class="fas fa-info-circle me-1"></i>Ingresa tu contraseña actual para verificar tu identidad
+                            </div>
+                        </div>
+                        
+                        <hr class="my-4">
+                        
+                        <!-- Nueva Contraseña -->
+                        <div class="mb-4">
+                            <label for="{{ form.new_password1.id_for_label }}" class="form-label fw-bold">
+                                <i class="fas fa-key me-2 text-success"></i>Nueva Contraseña
+                            </label>
+                            <div class="input-group password-field-container">
+                                <span class="input-group-text bg-light">
+                                    <i class="fas fa-lock text-muted"></i>
+                                </span>
+                                {{ form.new_password1 }}
+                                <button class="btn btn-outline-secondary" type="button" id="togglePassword1">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                            
+                            <!-- Requisitos de contraseña (se muestran dinámicamente) -->
+                            <div class="password-requirements mt-3">
+                                <h6 class="text-muted mb-2">
+                                    <i class="fas fa-shield-alt me-1"></i>Requisitos de seguridad:
+                                </h6>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <ul class="list-unstyled small">
+                                            <li class="requirement-item" data-requirement="length">
+                                                <i class="fas fa-circle text-muted me-2"></i>Mínimo 8 caracteres
+                                            </li>
+                                            <li class="requirement-item" data-requirement="personal">
+                                                <i class="fas fa-circle text-muted me-2"></i>No similar a información personal
+                                            </li>
+                                        </ul>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <ul class="list-unstyled small">
+                                            <li class="requirement-item" data-requirement="common">
+                                                <i class="fas fa-circle text-muted me-2"></i>No contraseña común
+                                            </li>
+                                            <li class="requirement-item" data-requirement="numeric">
+                                                <i class="fas fa-circle text-muted me-2"></i>No completamente numérica
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Confirmar Nueva Contraseña -->
+                        <div class="mb-4">
+                            <label for="{{ form.new_password2.id_for_label }}" class="form-label fw-bold">
+                                <i class="fas fa-check-circle me-2 text-info"></i>Confirmar Nueva Contraseña
+                            </label>
+                            <div class="input-group password-field-container">
+                                <span class="input-group-text bg-light">
+                                    <i class="fas fa-check text-muted"></i>
+                                </span>
+                                {{ form.new_password2 }}
+                                <button class="btn btn-outline-secondary" type="button" id="togglePassword2">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                            <div class="form-text">
+                                <i class="fas fa-info-circle me-1"></i>Repite la nueva contraseña para confirmar
+                            </div>
+                        </div>
+                        
+                        <!-- Botones de acción -->
+                        <div class="d-flex justify-content-between align-items-center mt-4 pt-3 border-top">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="showPasswords">
+                                <label class="form-check-label small" for="showPasswords">
+                                    Mostrar contraseñas
+                                </label>
+                            </div>
+                            <div class="d-flex gap-2">
+                                <button type="button" class="btn btn-outline-secondary" id="clearForm">
+                                    <i class="fas fa-times me-2"></i>Limpiar
+                                </button>
+                                <button type="submit" class="btn btn-primary px-4">
+                                    <i class="fas fa-save me-2"></i>Actualizar Contraseña
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Tarjeta de acciones rápidas -->
+            <div class="card shadow border-0">
+                <div class="card-header bg-white py-3">
+                    <h6 class="m-0 font-weight-bold text-white fs-5">
+                        <i class="fas fa-cogs me-2 text-warning"></i>Acciones Rápidas
+                    </h6>
+                </div>
+                <div class="card-body p-4">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <a href="{% url 'home' %}" class="action-card">
+                                <div class="card border-0 bg-light h-100">
+                                    <div class="card-body text-center p-4">
+                                        <i class="fas fa-home fa-2x text-primary mb-3"></i>
+                                        <h6 class="mb-2">Ir al Dashboard</h6>
+                                        <p class="text-muted small mb-0">Acceder al panel principal</p>
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <a href="{% url 'logout' %}" class="action-card">
+                                <div class="card border-0 bg-light h-100">
+                                    <div class="card-body text-center p-4">
+                                        <i class="fas fa-sign-out-alt fa-2x text-danger mb-3"></i>
+                                        <h6 class="mb-2">Cerrar Sesión</h6>
+                                        <p class="text-muted small mb-0">Salir del sistema</p>
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+/* Estilos personalizados para el perfil */
+.bg-gradient-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.avatar-container {
+    position: relative;
+    display: inline-block;
+}
+
+.avatar-circle {
+    width: 80px;
+    height: 80px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 3px solid rgba(255, 255, 255, 0.3);
+}
+
+.status-indicator {
+    position: absolute;
+    bottom: 5px;
+    right: 5px;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    border: 3px solid white;
+}
+
+.status-indicator.active {
+    background-color: #28a745;
+}
+
+.status-indicator.inactive {
+    background-color: #dc3545;
+}
+
+.stat-item {
+    padding: 10px;
+    border-radius: 8px;
+    background: #f8f9fa;
+}
+
+.icon-wrapper {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.bg-primary-light {
+    background-color: rgba(59, 130, 246, 0.1);
+}
+
+.bg-success-light {
+    background-color: rgba(40, 167, 69, 0.1);
+}
+
+.bg-info-light {
+    background-color: rgba(23, 162, 184, 0.1);
+}
+
+.bg-danger-light {
+    background-color: rgba(220, 53, 69, 0.1);
+}
+
+.quick-stats .stat-card {
+    padding: 15px;
+    border-radius: 8px;
+    background: #f8f9fa;
+    transition: all 0.3s ease;
+}
+
+.quick-stats .stat-card:hover {
+    background: #e9ecef;
+    transform: translateY(-2px);
+}
+
+.action-card {
+    text-decoration: none;
+    color: inherit;
+    display: block;
+    transition: all 0.3s ease;
+}
+
+.action-card:hover {
+    text-decoration: none;
+    color: inherit;
+    transform: translateY(-3px);
+}
+
+.action-card .card {
+    transition: all 0.3s ease;
+}
+
+.action-card:hover .card {
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.password-field-container {
+    max-width: 300px;
+    width: 100%;
+}
+
+.input-group .form-control {
+    border-left: none;
+    height: 45px;
+    width: 200px;
+}
+
+.input-group .input-group-text {
+    border-right: none;
+    background-color: #f8f9fa;
+}
+
+.input-group .form-control:focus {
+    border-left: none;
+    box-shadow: none;
+    border-color: #007bff;
+}
+
+.input-group:focus-within .input-group-text {
+    border-color: #007bff;
+    background-color: #e7f3ff;
+}
+
+.input-group .btn {
+    border-left: none;
+    height: 45px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 45px;
+}
+
+.input-group .btn:hover {
+    background-color: #e9ecef;
+    border-color: #ced4da;
+}
+
+.password-requirements {
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 15px;
+    border-left: 4px solid #007bff;
+    display: none;
+    animation: fadeIn 0.3s ease-in;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.requirement-item {
+    margin-bottom: 8px;
+    transition: all 0.3s ease;
+}
+
+.requirement-item.valid {
+    color: #28a745;
+}
+
+.requirement-item.valid i {
+    color: #28a745 !important;
+}
+
+.requirement-item.invalid {
+    color: #dc3545;
+}
+
+.requirement-item.invalid i {
+    color: #dc3545 !important;
+}
+
+.password-toggle {
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.password-toggle:hover {
+    background-color: #e9ecef;
+}
+
+.form-label {
+    color: #495057;
+    margin-bottom: 8px;
+}
+
+.form-text {
+    color: #6c757d;
+    font-size: 0.875rem;
+}
+
+.form-check-input:checked {
+    background-color: #007bff;
+    border-color: #007bff;
+}
+
+.btn-outline-secondary:hover {
+    background-color: #6c757d;
+    border-color: #6c757d;
+    color: white;
+}
+
+.card {
+    transition: transform 0.2s ease-in-out;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+}
+
+/* Animaciones */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.card {
+    animation: fadeInUp 0.6s ease-out;
+}
+
+.password-field-container {
+    max-width: 400px;
+    width: 100%;
+}
+
+.password-card-header {
+    transition: all 0.3s ease;
+}
+
+.password-card-header:hover {
+    background-color: #f8f9fa !important;
+}
+
+.password-card-header.active {
+    background-color: #e7f3ff !important;
+}
+
+.password-toggle-icon {
+    transition: transform 0.3s ease;
+}
+
+.password-card-header.active .password-toggle-icon {
+    transform: rotate(180deg);
+}
+
+.password-card-content {
+    animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        max-height: 0;
+        overflow: hidden;
+    }
+    to {
+        opacity: 1;
+        max-height: 1000px;
+        overflow: visible;
+    }
+}
+
+.password-field-container {
+    max-width: 300px;
+    width: 100%;
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Elementos del acordeón
+    const passwordCardHeader = document.querySelector('.password-card-header');
+    const passwordCardContent = document.querySelector('.password-card-content');
+    const passwordToggleIcon = document.querySelector('.password-toggle-icon');
+    
+    // Funcionalidad del acordeón
+    passwordCardHeader.addEventListener('click', function() {
+        const isActive = this.classList.contains('active');
+        
+        if (isActive) {
+            // Cerrar acordeón
+            this.classList.remove('active');
+            passwordCardContent.style.display = 'none';
+        } else {
+            // Abrir acordeón
+            this.classList.add('active');
+            passwordCardContent.style.display = 'block';
+        }
+    });
+    
+    // Elementos del formulario
+    const currentPasswordField = document.getElementById('{{ form.old_password.id_for_label }}');
+    const newPassword1Field = document.getElementById('{{ form.new_password1.id_for_label }}');
+    const newPassword2Field = document.getElementById('{{ form.new_password2.id_for_label }}');
+    const toggleCurrentPassword = document.getElementById('toggleCurrentPassword');
+    const togglePassword1 = document.getElementById('togglePassword1');
+    const togglePassword2 = document.getElementById('togglePassword2');
+    const showPasswordsCheckbox = document.getElementById('showPasswords');
+    const clearFormBtn = document.getElementById('clearForm');
+    
+    // Función para mostrar/ocultar contraseña
+    function togglePasswordVisibility(field, toggleBtn) {
+        if (field.type === 'password') {
+            field.type = 'text';
+            toggleBtn.innerHTML = '<i class="fas fa-eye-slash"></i>';
+        } else {
+            field.type = 'password';
+            toggleBtn.innerHTML = '<i class="fas fa-eye"></i>';
+        }
+    }
+    
+    // Event listeners para mostrar/ocultar contraseñas individuales
+    toggleCurrentPassword.addEventListener('click', function() {
+        togglePasswordVisibility(currentPasswordField, toggleCurrentPassword);
+    });
+    
+    togglePassword1.addEventListener('click', function() {
+        togglePasswordVisibility(newPassword1Field, togglePassword1);
+    });
+    
+    togglePassword2.addEventListener('click', function() {
+        togglePasswordVisibility(newPassword2Field, togglePassword2);
+    });
+    
+    // Mostrar requisitos de seguridad al hacer clic en Nueva Contraseña
+    newPassword1Field.addEventListener('focus', function() {
+        const requirements = document.querySelector('.password-requirements');
+        requirements.style.display = 'block';
+    });
+    
+    // Ocultar requisitos si el campo está vacío y se pierde el foco
+    newPassword1Field.addEventListener('blur', function() {
+        if (this.value === '') {
+            const requirements = document.querySelector('.password-requirements');
+            requirements.style.display = 'none';
+        }
+    });
+    
+    // Checkbox para mostrar todas las contraseñas
+    showPasswordsCheckbox.addEventListener('change', function() {
+        const fields = [currentPasswordField, newPassword1Field, newPassword2Field];
+        const toggles = [toggleCurrentPassword, togglePassword1, togglePassword2];
+        
+        fields.forEach(field => {
+            field.type = this.checked ? 'text' : 'password';
+        });
+        
+        toggles.forEach(toggle => {
+            toggle.innerHTML = this.checked ? '<i class="fas fa-eye-slash"></i>' : '<i class="fas fa-eye"></i>';
+        });
+    });
+    
+    // Botón limpiar formulario
+    clearFormBtn.addEventListener('click', function() {
+        const fields = [currentPasswordField, newPassword1Field, newPassword2Field];
+        fields.forEach(field => {
+            field.value = '';
+            field.type = 'password';
+        });
+        
+        showPasswordsCheckbox.checked = false;
+        toggleCurrentPassword.innerHTML = '<i class="fas fa-eye"></i>';
+        togglePassword1.innerHTML = '<i class="fas fa-eye"></i>';
+        togglePassword2.innerHTML = '<i class="fas fa-eye"></i>';
+        
+        // Ocultar requisitos de seguridad
+        const requirements = document.querySelector('.password-requirements');
+        requirements.style.display = 'none';
+        
+        // Limpiar validaciones visuales
+        document.querySelectorAll('.requirement-item').forEach(item => {
+            item.classList.remove('valid', 'invalid');
+            const icon = item.querySelector('i');
+            icon.className = 'fas fa-circle text-muted me-2';
+        });
+    });
+    
+    // Validación de contraseñas en tiempo real
+    function validatePassword(password) {
+        const requirements = {
+            length: password.length >= 8,
+            personal: !password.toLowerCase().includes('{{ user.username|lower }}') && 
+                     !password.toLowerCase().includes('{{ user.email|lower }}'),
+            common: !['password', '123456', 'admin', 'user'].includes(password.toLowerCase()),
+            numeric: !/^\d+$/.test(password)
+        };
+        
+        return requirements;
+    }
+    
+    function updateRequirementVisuals(requirements) {
+        const requirementItems = document.querySelectorAll('.requirement-item');
+        
+        requirementItems.forEach(item => {
+            const requirement = item.dataset.requirement;
+            const isValid = requirements[requirement];
+            
+            item.classList.remove('valid', 'invalid');
+            const icon = item.querySelector('i');
+            
+            if (isValid) {
+                item.classList.add('valid');
+                icon.className = 'fas fa-check-circle text-success me-2';
+            } else {
+                item.classList.add('invalid');
+                icon.className = 'fas fa-times-circle text-danger me-2';
+            }
+        });
+    }
+    
+    // Validación de coincidencia de contraseñas
+    function validatePasswordMatch() {
+        const password1 = newPassword1Field.value;
+        const password2 = newPassword2Field.value;
+        
+        if (password2 && password1 !== password2) {
+            newPassword2Field.setCustomValidity('Las contraseñas no coinciden');
+            newPassword2Field.classList.add('is-invalid');
+        } else {
+            newPassword2Field.setCustomValidity('');
+            newPassword2Field.classList.remove('is-invalid');
+        }
+    }
+    
+    // Event listeners para validación
+    newPassword1Field.addEventListener('input', function() {
+        const requirements = validatePassword(this.value);
+        updateRequirementVisuals(requirements);
+        validatePasswordMatch();
+    });
+    
+    newPassword2Field.addEventListener('input', validatePasswordMatch);
+    
+    // Prevenir envío si hay errores
+    document.querySelector('form').addEventListener('submit', function(e) {
+        const password1 = newPassword1Field.value;
+        const password2 = newPassword2Field.value;
+        
+        if (password1 !== password2) {
+            e.preventDefault();
+            alert('Las contraseñas no coinciden. Por favor verifica.');
+        }
+    });
+});
+</script>
+{% endblock %} 

@@ -1,0 +1,554 @@
+{% extends 'base.html' %}
+
+{% block title %}Reporte Profesional de Categorías - TradeInventory{% endblock %}
+
+{% block page_title %}Reporte Profesional de Categorías{% endblock %}
+
+{% block content %}
+<!-- Filtros Mejorados -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-filter me-2"></i>Filtros de Reporte
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="get" class="row g-3">
+                    <div class="col-md-3">
+                        <label for="fecha_inicio" class="form-label">Fecha Inicio</label>
+                        <input type="date" class="form-control" id="fecha_inicio" name="fecha_inicio" 
+                               value="{{ fecha_inicio }}">
+                    </div>
+                    <div class="col-md-3">
+                        <label for="fecha_fin" class="form-label">Fecha Fin</label>
+                        <input type="date" class="form-control" id="fecha_fin" name="fecha_fin" 
+                               value="{{ fecha_fin }}">
+                    </div>
+                    <div class="col-md-3">
+                        <label for="categoria_id" class="form-label">Categoría Específica</label>
+                        <select class="form-select" id="categoria_id" name="categoria_id">
+                            <option value="">Todas las categorías</option>
+                            {% for categoria in todas_categorias %}
+                                <option value="{{ categoria.id }}" {% if categoria.id|stringformat:"s" == categoria_seleccionada %}selected{% endif %}>
+                                    {{ categoria.nombre }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-3 d-flex align-items-end">
+                        <div class="d-grid gap-2 w-100">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-filter me-1"></i>Filtrar
+                            </button>
+                            <a href="?formato=excel&fecha_inicio={{ fecha_inicio }}&fecha_fin={{ fecha_fin }}&categoria_id={{ categoria_seleccionada }}" 
+                               class="btn btn-success">
+                                <i class="fas fa-file-excel me-1"></i>Exportar Excel
+                            </a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Tarjetas de Resumen -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card bg-primary text-white">
+            <div class="card-body text-center">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h4 class="card-title mb-0">{{ categorias_analisis|length }}</h4>
+                        <p class="card-text">Categorías Analizadas</p>
+                    </div>
+                    <i class="fas fa-chart-pie fa-2x opacity-75"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-success text-white">
+            <div class="card-body text-center">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h4 class="card-title mb-0">${{ total_ingresos_general|floatformat:0 }}</h4>
+                        <p class="card-text">Total Ingresos</p>
+                    </div>
+                    <i class="fas fa-dollar-sign fa-2x opacity-75"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-info text-white">
+            <div class="card-body text-center">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h4 class="card-title mb-0">{{ total_productos_general }}</h4>
+                        <p class="card-text">Total Productos</p>
+                    </div>
+                    <i class="fas fa-boxes fa-2x opacity-75"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-warning text-white">
+            <div class="card-body text-center">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h4 class="card-title mb-0">{{ total_stock_general }}</h4>
+                        <p class="card-text">Stock Total</p>
+                    </div>
+                    <i class="fas fa-warehouse fa-2x opacity-75"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Análisis Principal por Categorías -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-dark text-white">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-chart-pie me-2"></i>Análisis Detallado por Categorías
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if categorias_analisis %}
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Categoría</th>
+                                <th>Productos</th>
+                                <th>Total Vendido</th>
+                                <th>Ingresos</th>
+                                <th>% Participación</th>
+                                <th>Costo Total</th>
+                                <th>Margen</th>
+                                <th>% Margen</th>
+                                <th>Stock Total</th>
+                                <th>Valor Inventario</th>
+                                <th>Bajo Stock</th>
+                                <th>Sin Stock</th>
+                                <th>Rotación</th>
+                                <th>Días Inventario</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for categoria in categorias_analisis %}
+                            <tr>
+                                <td>
+                                    <strong>{{ categoria.categoria__nombre }}</strong>
+                                    {% if categoria.categoria__descripcion %}
+                                        <br><small class="text-muted">{{ categoria.categoria__descripcion|truncatechars:30 }}</small>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <span class="badge bg-info">{{ categoria.total_productos }}</span>
+                                </td>
+                                <td>
+                                    <span class="badge bg-secondary">{{ categoria.total_vendido }}</span>
+                                </td>
+                                <td>
+                                    <strong>${{ categoria.total_ingresos|floatformat:2 }}</strong>
+                                </td>
+                                <td>
+                                    <div class="progress" style="height: 20px;">
+                                        <div class="progress-bar bg-primary" role="progressbar" 
+                                             style="width: {{ categoria.porcentaje_participacion }}%">
+                                            {{ categoria.porcentaje_participacion|floatformat:1 }}%
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>${{ categoria.costo_total|floatformat:2 }}</td>
+                                <td>
+                                    <span class="{% if categoria.margen_ganancia > 0 %}text-success{% else %}text-danger{% endif %}">
+                                        <strong>${{ categoria.margen_ganancia|floatformat:2 }}</strong>
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="badge {% if categoria.porcentaje_margen > 30 %}bg-success{% elif categoria.porcentaje_margen > 20 %}bg-warning{% elif categoria.porcentaje_margen > 10 %}bg-info{% else %}bg-danger{% endif %}">
+                                        {{ categoria.porcentaje_margen|floatformat:1 }}%
+                                    </span>
+                                </td>
+                                <td>{{ categoria.stock_total }}</td>
+                                <td>${{ categoria.valor_inventario|floatformat:2 }}</td>
+                                <td>
+                                    {% if categoria.productos_bajo_stock > 0 %}
+                                        <span class="badge bg-warning">{{ categoria.productos_bajo_stock }}</span>
+                                    {% else %}
+                                        <span class="badge bg-success">0</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if categoria.productos_sin_stock > 0 %}
+                                        <span class="badge bg-danger">{{ categoria.productos_sin_stock }}</span>
+                                    {% else %}
+                                        <span class="badge bg-success">0</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <span class="badge {% if categoria.rotacion_inventario > 12 %}bg-success{% elif categoria.rotacion_inventario > 6 %}bg-warning{% else %}bg-danger{% endif %}">
+                                        {{ categoria.rotacion_inventario|floatformat:1 }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="badge {% if categoria.dias_inventario < 30 %}bg-success{% elif categoria.dias_inventario < 60 %}bg-warning{% else %}bg-danger{% endif %}">
+                                        {{ categoria.dias_inventario|floatformat:0 }} días
+                                    </span>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="fas fa-folder-open text-muted fa-3x mb-3"></i>
+                    <h5>No hay datos disponibles</h5>
+                    <p class="text-muted">No se encontraron ventas por categorías en el período seleccionado.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Gráficos y Análisis Secundarios -->
+<div class="row">
+    <!-- Top Productos por Categoría -->
+    <div class="col-md-6 mb-4">
+        <div class="card h-100">
+            <div class="card-header bg-info text-white">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-trophy me-2"></i>Top Productos por Categoría
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if productos_por_categoria %}
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Categoría</th>
+                                <th>Producto</th>
+                                <th>Vendido</th>
+                                <th>Ingresos</th>
+                                <th>Precio Prom.</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for producto in productos_por_categoria %}
+                            <tr>
+                                <td>
+                                    <span class="badge bg-secondary">{{ producto.producto__categoria__nombre }}</span>
+                                </td>
+                                <td>
+                                    <strong>{{ producto.producto__nombre }}</strong>
+                                </td>
+                                <td>
+                                    <span class="badge bg-primary">{{ producto.total_vendido }}</span>
+                                </td>
+                                <td>
+                                    <strong>${{ producto.total_ingresos|floatformat:2 }}</strong>
+                                </td>
+                                <td>${{ producto.promedio_precio|floatformat:2 }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-muted text-center">No hay productos vendidos por categorías.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Rendimiento por Margen -->
+    <div class="col-md-6 mb-4">
+        <div class="card h-100">
+            <div class="card-header bg-success text-white">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-chart-line me-2"></i>Rendimiento por Margen
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if categorias_rendimiento %}
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Posición</th>
+                                <th>Categoría</th>
+                                <th>% Margen</th>
+                                <th>% Participación</th>
+                                <th>Rendimiento</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for categoria in categorias_rendimiento %}
+                            <tr>
+                                <td>
+                                    <span class="badge {% if forloop.counter == 1 %}bg-warning{% elif forloop.counter == 2 %}bg-secondary{% elif forloop.counter == 3 %}bg-info{% else %}bg-light text-dark{% endif %}">
+                                        #{{ forloop.counter }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <strong>{{ categoria.categoria__nombre }}</strong>
+                                </td>
+                                <td>
+                                    <span class="badge {% if categoria.porcentaje_margen > 30 %}bg-success{% elif categoria.porcentaje_margen > 20 %}bg-warning{% elif categoria.porcentaje_margen > 10 %}bg-info{% else %}bg-danger{% endif %}">
+                                        {{ categoria.porcentaje_margen|floatformat:1 }}%
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="progress" style="height: 15px;">
+                                        <div class="progress-bar bg-primary" role="progressbar" 
+                                             style="width: {{ categoria.porcentaje_participacion }}%">
+                                            {{ categoria.porcentaje_participacion|floatformat:1 }}%
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    {% if categoria.porcentaje_margen > 30 %}
+                                        <span class="badge bg-success">Excelente</span>
+                                    {% elif categoria.porcentaje_margen > 20 %}
+                                        <span class="badge bg-warning">Bueno</span>
+                                    {% elif categoria.porcentaje_margen > 10 %}
+                                        <span class="badge bg-info">Regular</span>
+                                    {% else %}
+                                        <span class="badge bg-danger">Bajo</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-muted text-center">No hay datos de rendimiento disponibles.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Rotación de Inventario -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-warning text-dark">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-sync-alt me-2"></i>Análisis de Rotación de Inventario
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if categorias_rotacion %}
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead class="table-warning">
+                            <tr>
+                                <th>Posición</th>
+                                <th>Categoría</th>
+                                <th>Rotación Anual</th>
+                                <th>Días de Inventario</th>
+                                <th>Stock Total</th>
+                                <th>Total Vendido</th>
+                                <th>Eficiencia</th>
+                                <th>Estado</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for categoria in categorias_rotacion %}
+                            <tr>
+                                <td>
+                                    <span class="badge {% if forloop.counter == 1 %}bg-warning{% elif forloop.counter == 2 %}bg-secondary{% elif forloop.counter == 3 %}bg-info{% else %}bg-light text-dark{% endif %}">
+                                        #{{ forloop.counter }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <strong>{{ categoria.categoria__nombre }}</strong>
+                                </td>
+                                <td>
+                                    <span class="badge {% if categoria.rotacion_inventario > 12 %}bg-success{% elif categoria.rotacion_inventario > 6 %}bg-warning{% else %}bg-danger{% endif %}">
+                                        {{ categoria.rotacion_inventario|floatformat:1 }} veces/año
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="badge {% if categoria.dias_inventario < 30 %}bg-success{% elif categoria.dias_inventario < 60 %}bg-warning{% else %}bg-danger{% endif %}">
+                                        {{ categoria.dias_inventario|floatformat:0 }} días
+                                    </span>
+                                </td>
+                                <td>{{ categoria.stock_total }}</td>
+                                <td>{{ categoria.total_vendido }}</td>
+                                <td>
+                                    <div class="progress" style="height: 15px;">
+                                        <div class="progress-bar {% if categoria.eficiencia_inventario > 80 %}bg-success{% elif categoria.eficiencia_inventario > 50 %}bg-warning{% else %}bg-danger{% endif %}" 
+                                             role="progressbar" style="width: {{ categoria.eficiencia_inventario }}%">
+                                            {{ categoria.eficiencia_inventario|floatformat:1 }}%
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    {% if categoria.rotacion_inventario > 12 %}
+                                        <span class="badge bg-success">Alta Rotación</span>
+                                    {% elif categoria.rotacion_inventario > 6 %}
+                                        <span class="badge bg-warning">Rotación Media</span>
+                                    {% else %}
+                                        <span class="badge bg-danger">Baja Rotación</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-muted text-center">No hay datos de rotación disponibles.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Tendencias Mensuales -->
+{% if tendencias_mensuales %}
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-info text-white">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-chart-area me-2"></i>Análisis de Tendencias Mensuales
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead class="table-info">
+                            <tr>
+                                <th>Categoría</th>
+                                <th>Mes</th>
+                                <th>Año</th>
+                                <th>Total Vendido</th>
+                                <th>Total Ingresos</th>
+                                <th>Promedio por Unidad</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for tendencia in tendencias_mensuales %}
+                            <tr>
+                                <td>
+                                    <span class="badge bg-secondary">{{ tendencia.producto__categoria__nombre }}</span>
+                                </td>
+                                <td>
+                                    {% if tendencia.mes == 1 %}Enero
+                                    {% elif tendencia.mes == 2 %}Febrero
+                                    {% elif tendencia.mes == 3 %}Marzo
+                                    {% elif tendencia.mes == 4 %}Abril
+                                    {% elif tendencia.mes == 5 %}Mayo
+                                    {% elif tendencia.mes == 6 %}Junio
+                                    {% elif tendencia.mes == 7 %}Julio
+                                    {% elif tendencia.mes == 8 %}Agosto
+                                    {% elif tendencia.mes == 9 %}Septiembre
+                                    {% elif tendencia.mes == 10 %}Octubre
+                                    {% elif tendencia.mes == 11 %}Noviembre
+                                    {% elif tendencia.mes == 12 %}Diciembre
+                                    {% endif %}
+                                </td>
+                                <td>{{ tendencia.año }}</td>
+                                <td>
+                                    <span class="badge bg-primary">{{ tendencia.total_vendido }}</span>
+                                </td>
+                                <td>
+                                    <strong>${{ tendencia.total_ingresos|floatformat:2 }}</strong>
+                                </td>
+                                <td>
+                                    {% if tendencia.total_vendido > 0 %}
+                                        {% widthratio tendencia.total_ingresos tendencia.total_vendido 1 as promedio %}
+                                        ${{ promedio|floatformat:2 }}
+                                    {% else %}
+                                        $0.00
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Resumen Ejecutivo -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-dark text-white">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-chart-bar me-2"></i>Resumen Ejecutivo
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6 class="text-primary">Categoría con Mejor Rendimiento:</h6>
+                        <p class="mb-3">
+                            {% if categorias_rendimiento %}
+                                <strong>{{ categorias_rendimiento.0.categoria__nombre }}</strong> 
+                                con un margen del {{ categorias_rendimiento.0.porcentaje_margen|floatformat:1 }}%
+                            {% else %}
+                                No hay datos disponibles
+                            {% endif %}
+                        </p>
+                        
+                        <h6 class="text-success">Categoría con Mejor Rotación:</h6>
+                        <p class="mb-3">
+                            {% if categorias_rotacion %}
+                                <strong>{{ categorias_rotacion.0.categoria__nombre }}</strong> 
+                                con {{ categorias_rotacion.0.rotacion_inventario|floatformat:1 }} rotaciones anuales
+                            {% else %}
+                                No hay datos disponibles
+                            {% endif %}
+                        </p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="text-info">Categoría con Mayor Participación:</h6>
+                        <p class="mb-3">
+                            {% if categorias_analisis %}
+                                {% with max_participacion=categorias_analisis|dictsort:"porcentaje_participacion"|last %}
+                                    <strong>{{ max_participacion.categoria__nombre }}</strong> 
+                                    con {{ max_participacion.porcentaje_participacion|floatformat:1 }}% de participación
+                                {% endwith %}
+                            {% else %}
+                                No hay datos disponibles
+                            {% endif %}
+                        </p>
+                        
+                        <h6 class="text-warning">Alertas de Stock:</h6>
+                        <p class="mb-3">
+                            {% with total_bajo_stock=categorias_analisis|dictsort:"productos_bajo_stock"|last %}
+                                {% if total_bajo_stock.productos_bajo_stock > 0 %}
+                                    <strong>{{ total_bajo_stock.categoria__nombre }}</strong> 
+                                    tiene {{ total_bajo_stock.productos_bajo_stock }} productos bajo stock
+                                {% else %}
+                                    No hay alertas de stock
+                                {% endif %}
+                            {% endwith %}
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

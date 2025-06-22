@@ -1,0 +1,202 @@
+{% extends 'base.html' %}
+
+{% block title %}Nueva Venta - TradeInventory{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-0 text-gray-800">
+                <i class="fas fa-plus me-2"></i>Nueva Venta
+            </h1>
+            <p class="text-muted mb-0">Registrar una nueva venta</p>
+        </div>
+        <a href="{% url 'ventas:lista_ventas' %}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left me-2"></i>Volver
+        </a>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <!-- Formulario de Venta -->
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Detalles de la Venta</h6>
+                </div>
+                <div class="card-body">
+                    <form method="post" id="ventaForm">
+                        {% csrf_token %}
+                        
+                        <!-- Selección de Cliente -->
+                        <div class="mb-3">
+                            <label for="cliente" class="form-label">Cliente</label>
+                            <select name="cliente" id="cliente" class="form-select">
+                                <option value="">Cliente General</option>
+                                {% for cliente in clientes %}
+                                <option value="{{ cliente.id }}">{{ cliente.nombre }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <!-- Productos -->
+                        <div class="mb-3">
+                            <label class="form-label">Productos</label>
+                            <div id="productos-container">
+                                <div class="row mb-2 producto-row">
+                                    <div class="col-md-6">
+                                        <select name="productos[]" class="form-select producto-select" required>
+                                            <option value="">Seleccionar producto</option>
+                                            {% for producto in productos %}
+                                            <option value="{{ producto.id }}" 
+                                                    data-precio="{{ producto.precio }}"
+                                                    data-stock="{{ producto.stock_actual }}">
+                                                {{ producto.nombre }} - Stock: {{ producto.stock_actual }}
+                                            </option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <input type="number" name="cantidades[]" class="form-control cantidad-input" 
+                                               min="1" placeholder="Cantidad" required>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <input type="text" class="form-control subtotal" readonly>
+                                    </div>
+                                    <div class="col-md-1">
+                                        <button type="button" class="btn btn-danger btn-sm remove-producto">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            <button type="button" class="btn btn-success btn-sm mt-2" id="agregar-producto">
+                                <i class="fas fa-plus me-2"></i>Agregar Producto
+                            </button>
+                        </div>
+
+                        <!-- Total -->
+                        <div class="row">
+                            <div class="col-md-6 offset-md-6">
+                                <div class="card bg-primary text-white">
+                                    <div class="card-body">
+                                        <h5 class="card-title">Total</h5>
+                                        <h3 class="mb-0" id="total-venta">$0.00</h3>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mt-4">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-2"></i>Guardar Venta
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <!-- Resumen de Stock -->
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Productos con Stock Bajo</h6>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Producto</th>
+                                    <th>Stock</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for producto in productos %}
+                                {% if producto.stock_actual <= 5 %}
+                                <tr>
+                                    <td>{{ producto.nombre }}</td>
+                                    <td>
+                                        <span class="badge bg-danger">{{ producto.stock_actual }}</span>
+                                    </td>
+                                </tr>
+                                {% endif %}
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // Función para calcular subtotal
+    function calcularSubtotal(row) {
+        const precio = parseFloat(row.find('.producto-select option:selected').data('precio')) || 0;
+        const cantidad = parseInt(row.find('.cantidad-input').val()) || 0;
+        const subtotal = precio * cantidad;
+        row.find('.subtotal').val('$' + subtotal.toFixed(2));
+        calcularTotal();
+    }
+
+    // Función para calcular total
+    function calcularTotal() {
+        let total = 0;
+        $('.subtotal').each(function() {
+            const valor = parseFloat($(this).val().replace('$', '')) || 0;
+            total += valor;
+        });
+        $('#total-venta').text('$' + total.toFixed(2));
+    }
+
+    // Agregar producto
+    $('#agregar-producto').click(function() {
+        const newRow = $('.producto-row:first').clone();
+        newRow.find('select').val('');
+        newRow.find('input').val('');
+        $('#productos-container').append(newRow);
+    });
+
+    // Eliminar producto
+    $(document).on('click', '.remove-producto', function() {
+        if ($('.producto-row').length > 1) {
+            $(this).closest('.producto-row').remove();
+            calcularTotal();
+        }
+    });
+
+    // Calcular subtotal al cambiar producto o cantidad
+    $(document).on('change', '.producto-select, .cantidad-input', function() {
+        const row = $(this).closest('.producto-row');
+        const stock = parseInt(row.find('.producto-select option:selected').data('stock')) || 0;
+        const cantidad = parseInt(row.find('.cantidad-input').val()) || 0;
+
+        if (cantidad > stock) {
+            alert('No hay suficiente stock disponible');
+            row.find('.cantidad-input').val(stock);
+        }
+        
+        calcularSubtotal(row);
+    });
+
+    // Validar formulario antes de enviar
+    $('#ventaForm').submit(function(e) {
+        let total = 0;
+        $('.subtotal').each(function() {
+            total += parseFloat($(this).val().replace('$', '')) || 0;
+        });
+
+        if (total <= 0) {
+            e.preventDefault();
+            alert('Debe agregar al menos un producto a la venta');
+        }
+    });
+});
+</script>
+{% endblock %} 

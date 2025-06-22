@@ -1,0 +1,220 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Historial de Abonos - {{ cliente.nombre }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">
+            <i class="fas fa-history text-primary"></i>
+            Historial de Abonos
+        </h1>
+        <div>
+            <a href="{% url 'clientes:deudas_simples' cliente.id %}" class="btn btn-info btn-sm">
+                <i class="fas fa-arrow-left"></i> Volver a Deudas
+            </a>
+            <a href="{% url 'clientes:lista_clientes' %}" class="btn btn-secondary btn-sm">
+                <i class="fas fa-users"></i> Lista de Clientes
+            </a>
+        </div>
+    </div>
+
+    <!-- Información del Cliente -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">
+                <i class="fas fa-user"></i> Cliente: {{ cliente.nombre }}
+            </h6>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-3">
+                    <strong>Teléfono:</strong> {{ cliente.telefono }}
+                </div>
+                <div class="col-md-3">
+                    <strong>Email:</strong> {{ cliente.email|default:"No especificado" }}
+                </div>
+                <div class="col-md-3">
+                    <strong>Documento:</strong> {{ cliente.documento|default:"No especificado" }}
+                </div>
+                <div class="col-md-3">
+                    <strong>Estado:</strong> 
+                    {% if cliente.activo %}
+                        <span class="badge bg-success">Activo</span>
+                    {% else %}
+                        <span class="badge bg-danger">Inactivo</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Estadísticas -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                Total Abonos
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                ${{ total_abonos|floatformat:2 }}
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-hand-holding-usd fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                Pagos Completos
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                ${{ total_pagos|floatformat:2 }}
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-check-circle fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                Cancelaciones
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                ${{ total_cancelaciones|floatformat:2 }}
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-times-circle fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                Total Movimientos
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                {{ total_movimientos }}
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-list fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabla de Movimientos -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">
+                <i class="fas fa-table"></i> Historial de Movimientos
+            </h6>
+        </div>
+        <div class="card-body">
+            {% if movimientos %}
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Fecha</th>
+                            <th>Tipo</th>
+                            <th>Descripción</th>
+                            <th>Monto</th>
+                            <th>Estado</th>
+                            <th>Origen</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for movimiento in movimientos %}
+                        <tr class="{% if movimiento.tipo == 'Abono' %}table-info{% elif movimiento.tipo == 'Cancelación' %}table-danger{% elif movimiento.tipo == 'Pago completo' %}table-success{% else %}table-warning{% endif %}">
+                            <td>{{ movimiento.fecha|date:"d/m/Y H:i" }}</td>
+                            <td>
+                                {% if movimiento.tipo == 'Abono' %}
+                                    <span class="badge bg-info">
+                                        <i class="fas fa-hand-holding-usd"></i> Abono
+                                    </span>
+                                {% elif movimiento.tipo == 'Cancelación' %}
+                                    <span class="badge bg-danger">
+                                        <i class="fas fa-times"></i> Cancelación
+                                    </span>
+                                {% elif movimiento.tipo == 'Pago completo' %}
+                                    <span class="badge bg-success">
+                                        <i class="fas fa-check"></i> Pago Completo
+                                    </span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <strong>{{ movimiento.descripcion }}</strong>
+                            </td>
+                            <td class="fw-bold">${{ movimiento.monto|floatformat:2 }}</td>
+                            <td>
+                                {% if movimiento.estado == 'pagado' %}
+                                    <span class="badge bg-success">Pagado</span>
+                                {% elif movimiento.estado == 'cancelado' %}
+                                    <span class="badge bg-danger">Cancelado</span>
+                                {% elif movimiento.estado == 'abonado' %}
+                                    <span class="badge bg-info">Abonado</span>
+                                {% else %}
+                                    <span class="badge bg-warning">{{ movimiento.estado|title }}</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <span class="badge bg-primary">{{ movimiento.origen }} #{{ movimiento.origen_id }}</span>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center py-4">
+                <i class="fas fa-inbox fa-3x text-gray-300 mb-3"></i>
+                <h5 class="text-gray-500">No hay movimientos registrados</h5>
+                <p class="text-gray-400">Este cliente no tiene historial de abonos, pagos o cancelaciones.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Agregar funcionalidad adicional si es necesaria
+    document.addEventListener('DOMContentLoaded', function() {
+        // Aquí puedes agregar funcionalidad JavaScript si es necesaria
+        console.log('Historial de abonos cargado');
+    });
+</script>
+{% endblock %} 

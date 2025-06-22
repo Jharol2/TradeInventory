@@ -1,0 +1,313 @@
+{% extends 'base.html' %}
+{% load humanize %}
+
+{% block title %}Productos - TradeInventory{% endblock %}
+
+{% block page_title %}Productos{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header con acciones principales -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div class="d-flex align-items-center">
+                    <div class="me-3">
+                        <span class="badge bg-primary fs-6">{{ productos.paginator.count }} productos</span>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <a href="?estado=activo{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.categoria %}&categoria={{ request.GET.categoria }}{% endif %}{% if request.GET.stock %}&stock={{ request.GET.stock }}{% endif %}" 
+                           class="btn btn-sm {% if estado_actual == 'activo' %}btn-primary{% else %}btn-outline-primary{% endif %}">
+                            <i class="fas fa-check-circle me-1"></i>Activos
+                        </a>
+                        <a href="?estado=inactivo{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.categoria %}&categoria={{ request.GET.categoria }}{% endif %}{% if request.GET.stock %}&stock={{ request.GET.stock }}{% endif %}" 
+                           class="btn btn-sm {% if estado_actual == 'inactivo' %}btn-primary{% else %}btn-outline-primary{% endif %}">
+                            <i class="fas fa-times-circle me-1"></i>Inactivos
+                        </a>
+                    </div>
+                </div>
+                <div class="d-flex gap-2">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-toggle="collapse" data-bs-target="#filtrosAvanzados">
+                        <i class="fas fa-filter me-2"></i>Filtros
+                    </button>
+                    <a href="{% url 'productos:crear_producto' %}" class="btn btn-primary">
+                        <i class="fas fa-plus me-2"></i>Nuevo Producto
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtros Avanzados -->
+    <div class="collapse mb-4" id="filtrosAvanzados">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="card-title mb-0">
+                    <i class="fas fa-search me-2"></i>Búsqueda y Filtros Avanzados
+                </h6>
+            </div>
+            <div class="card-body">
+                <form method="get" class="row g-3">
+                    <div class="col-md-4">
+                        <label class="form-label">Buscar producto</label>
+                        <div class="input-group">
+                            <span class="input-group-text">
+                                <i class="fas fa-search"></i>
+                            </span>
+                            <input type="text" name="q" class="form-control" placeholder="Nombre, descripción..." 
+                                   value="{{ request.GET.q }}">
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Categoría</label>
+                        <select name="categoria" class="form-select">
+                            <option value="">Todas las categorías</option>
+                            {% for cat in categorias %}
+                                <option value="{{ cat.id }}" {% if request.GET.categoria == cat.id|stringformat:"i" %}selected{% endif %}>
+                                    {{ cat.nombre }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">Stock</label>
+                        <select name="stock" class="form-select">
+                            <option value="">Todo el stock</option>
+                            <option value="bajo" {% if request.GET.stock == 'bajo' %}selected{% endif %}>Stock Bajo</option>
+                            <option value="sin" {% if request.GET.stock == 'sin' %}selected{% endif %}>Sin Stock</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Ordenar por</label>
+                        <select name="orden" class="form-select">
+                            <option value="nombre" {% if request.GET.orden == 'nombre' %}selected{% endif %}>Nombre A-Z</option>
+                            <option value="-nombre" {% if request.GET.orden == '-nombre' %}selected{% endif %}>Nombre Z-A</option>
+                            <option value="precio" {% if request.GET.orden == 'precio' %}selected{% endif %}>Precio Menor</option>
+                            <option value="-precio" {% if request.GET.orden == '-precio' %}selected{% endif %}>Precio Mayor</option>
+                            <option value="stock_inicial" {% if request.GET.orden == 'stock_inicial' %}selected{% endif %}>Stock Menor</option>
+                            <option value="-stock_inicial" {% if request.GET.orden == '-stock_inicial' %}selected{% endif %}>Stock Mayor</option>
+                            <option value="fecha_creacion" {% if request.GET.orden == 'fecha_creacion' %}selected{% endif %}>Más Recientes</option>
+                            <option value="-fecha_creacion" {% if request.GET.orden == '-fecha_creacion' %}selected{% endif %}>Más Antiguos</option>
+                        </select>
+                    </div>
+                    <div class="col-12">
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-search me-2"></i>Buscar
+                            </button>
+                            <a href="{% url 'productos:lista_productos' %}" class="btn btn-outline-secondary">
+                                <i class="fas fa-times me-2"></i>Limpiar
+                            </a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lista de Productos -->
+    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 row-cols-xl-4 g-4">
+        {% if not productos %}
+            <div class="col-12">
+                <div class="alert alert-info text-center">
+                    <i class="fas fa-box-open fa-2x mb-3"></i>
+                    <h5>No se encontraron productos</h5>
+                    <p class="mb-0">Crea tu primer producto para comenzar a gestionar tu inventario</p>
+                    <a href="{% url 'productos:crear_producto' %}" class="btn btn-primary mt-3">
+                        <i class="fas fa-plus me-2"></i>Crear Producto
+                    </a>
+                </div>
+            </div>
+        {% else %}
+            {% for producto in productos %}
+            <div class="col">
+                <div class="card h-100 product-card">
+                    {% if producto.imagen %}
+                        <img src="{{ producto.imagen.url }}" class="card-img-top" alt="{{ producto.nombre }}" style="height: 200px; object-fit: cover;">
+                    {% else %}
+                        <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 200px;">
+                            <i class="fas fa-box fa-3x text-muted"></i>
+                        </div>
+                    {% endif %}
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <h5 class="card-title mb-0">{{ producto.nombre }}</h5>
+                            <div class="card-options">
+                                <div class="dropdown">
+                                    <button class="btn btn-link p-0" type="button" data-bs-toggle="dropdown" 
+                                            style="background: #3498db; border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;">
+                                        <i class="fas fa-ellipsis-v text-white"></i>
+                                    </button>
+                                    <ul class="dropdown-menu dropdown-menu-end">
+                                        <li>
+                                            <a class="dropdown-item" href="{% url 'productos:editar_producto' producto.id %}">
+                                                <i class="fas fa-edit me-2"></i>Editar
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a class="dropdown-item" href="{% url 'categorias:detalle_categoria' producto.categoria.id %}">
+                                                <i class="fas fa-tag me-2"></i>Ver categoría
+                                            </a>
+                                        </li>
+                                        <div class="dropdown-divider"></div>
+                                        <li>
+                                            <a class="dropdown-item btn-cambiar-estado {% if producto.activo %}text-danger{% else %}text-success{% endif %}" href="#" 
+                                               data-bs-toggle="modal"
+                                               data-bs-target="#confirmarModal"
+                                               data-url="{% url 'productos:cambiar_estado_producto' producto.pk %}"
+                                               data-nombre="{{ producto.nombre }}"
+                                               data-accion="{% if producto.activo %}desactivar{% else %}activar{% endif %}">
+                                                <i class="fas {% if producto.activo %}fa-ban{% else %}fa-check-circle{% endif %} me-2"></i>
+                                                {% if producto.activo %}Desactivar{% else %}Activar{% endif %}
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        <p class="card-text text-muted">{{ producto.descripcion|truncatechars:100 }}</p>
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="h5 mb-0 text-primary">${{ producto.precio|intcomma }}</span>
+                            <span class="badge {% if producto.stock_actual <= producto.stock_minimo %}bg-danger{% else %}bg-success{% endif %} text-white ms-2">
+                                Stock: {{ producto.stock_actual }}
+                            </span>
+                        </div>
+                        <div class="d-flex align-items-center">
+                            <span class="badge bg-secondary me-2">
+                                <i class="fas fa-tag me-1"></i>{{ producto.categoria.nombre }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        {% endif %}
+    </div>
+
+    <!-- Paginación -->
+    {% if productos.has_other_pages %}
+    <nav class="mt-4">
+        <ul class="pagination justify-content-center">
+            {% if productos.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page=1{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.categoria %}&categoria={{ request.GET.categoria }}{% endif %}{% if request.GET.stock %}&stock={{ request.GET.stock }}{% endif %}{% if request.GET.orden %}&orden={{ request.GET.orden }}{% endif %}{% if estado_actual %}&estado={{ estado_actual }}{% endif %}">
+                        <i class="fas fa-angle-double-left"></i>
+                    </a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ productos.previous_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.categoria %}&categoria={{ request.GET.categoria }}{% endif %}{% if request.GET.stock %}&stock={{ request.GET.stock }}{% endif %}{% if request.GET.orden %}&orden={{ request.GET.orden }}{% endif %}{% if estado_actual %}&estado={{ estado_actual }}{% endif %}">
+                        <i class="fas fa-angle-left"></i>
+                    </a>
+                </li>
+            {% endif %}
+
+            {% for num in productos.paginator.page_range %}
+                {% if productos.number == num %}
+                    <li class="page-item active">
+                        <span class="page-link">{{ num }}</span>
+                    </li>
+                {% elif num > productos.number|add:'-3' and num < productos.number|add:'3' %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ num }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.categoria %}&categoria={{ request.GET.categoria }}{% endif %}{% if request.GET.stock %}&stock={{ request.GET.stock }}{% endif %}{% if request.GET.orden %}&orden={{ request.GET.orden }}{% endif %}{% if estado_actual %}&estado={{ estado_actual }}{% endif %}">
+                            {{ num }}
+                        </a>
+                    </li>
+                {% endif %}
+            {% endfor %}
+
+            {% if productos.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ productos.next_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.categoria %}&categoria={{ request.GET.categoria }}{% endif %}{% if request.GET.stock %}&stock={{ request.GET.stock }}{% endif %}{% if request.GET.orden %}&orden={{ request.GET.orden }}{% endif %}{% if estado_actual %}&estado={{ estado_actual }}{% endif %}">
+                        <i class="fas fa-angle-right"></i>
+                    </a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ productos.paginator.num_pages }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.categoria %}&categoria={{ request.GET.categoria }}{% endif %}{% if request.GET.stock %}&stock={{ request.GET.stock }}{% endif %}{% if request.GET.orden %}&orden={{ request.GET.orden }}{% endif %}{% if estado_actual %}&estado={{ estado_actual }}{% endif %}">
+                        <i class="fas fa-angle-double-right"></i>
+                    </a>
+                </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+</div>
+
+<!-- Modal de confirmación -->
+<div class="modal fade" id="confirmarModal" tabindex="-1" aria-labelledby="confirmarModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="confirmarModalLabel">Confirmar acción</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+      </div>
+      <div class="modal-body">
+        ¿Estás seguro que deseas <span id="accionModal"></span> el producto <strong id="nombreProductoModal"></strong>?
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <a href="#" id="confirmarAccionBtn" class="btn btn-primary">Sí, continuar</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% block extra_css %}
+<style>
+    .product-card {
+        transition: all 0.3s ease;
+        border: 1px solid #e9ecef;
+    }
+
+    .product-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 25px rgba(52, 152, 219, 0.15);
+    }
+
+    .product-card .card-options {
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+
+    .product-card:hover .card-options {
+        opacity: 1;
+    }
+
+    .btn-group .btn {
+        border-radius: 6px;
+        margin: 0 2px;
+    }
+
+    .badge {
+        font-size: 0.75rem;
+    }
+
+    .text-primary {
+        color: #3498db !important;
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var confirmarModal = document.getElementById('confirmarModal');
+    var confirmarAccionBtn = document.getElementById('confirmarAccionBtn');
+    var nombreProductoModal = document.getElementById('nombreProductoModal');
+    var accionModal = document.getElementById('accionModal');
+
+    document.querySelectorAll('.btn-cambiar-estado').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            var url = this.getAttribute('data-url');
+            var nombre = this.getAttribute('data-nombre');
+            var accion = this.getAttribute('data-accion');
+            confirmarAccionBtn.href = url;
+            nombreProductoModal.textContent = nombre;
+            accionModal.textContent = accion;
+            confirmarAccionBtn.classList.remove('btn-danger', 'btn-success');
+            confirmarAccionBtn.classList.add('btn-primary');
+        });
+    });
+});
+</script>
+{% endblock %}
+{% endblock %} 
