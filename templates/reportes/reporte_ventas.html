@@ -34,7 +34,7 @@
             <div class="card text-center">
                 <div class="card-body">
                     <h5 class="card-title">Total Ventas</h5>
-                    <h3 class="text-primary">{{ ventas_por_dia|length }}</h3>
+                    <h3 class="text-primary">{{ total_ventas }}</h3>
                 </div>
             </div>
         </div>
@@ -43,7 +43,7 @@
                 <div class="card-body">
                     <h5 class="card-title">Valor Total</h5>
                     <h3 class="text-success">
-                        ${{ ventas_por_dia|dictsort:"monto_total"|last|default:0|floatformat:2 }}
+                        ${{ monto_total|floatformat:2 }}
                     </h3>
                 </div>
             </div>

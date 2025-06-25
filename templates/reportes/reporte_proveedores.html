@@ -34,7 +34,7 @@
             <div class="card text-center">
                 <div class="card-body">
                     <h5 class="card-title">Total Proveedores</h5>
-                    <h3 class="text-primary">{{ proveedores_analisis|length }}</h3>
+                    <h3 class="text-primary">{{ total_proveedores }}</h3>
                 </div>
             </div>
         </div>
@@ -42,17 +42,7 @@
             <div class="card text-center">
                 <div class="card-body">
                     <h5 class="card-title">Total Productos</h5>
-                    <h3 class="text-success">
-                        {% if productos_por_proveedor %}
-                            {% for proveedor in productos_por_proveedor %}
-                                {% if forloop.first %}
-                                    {{ proveedor.cantidad_productos }}
-                                {% endif %}
-                            {% endfor %}
-                        {% else %}
-                            0
-                        {% endif %}
-                    </h3>
+                    <h3 class="text-success">{{ total_productos_proveedores }}</h3>
                 </div>
             </div>
         </div>
@@ -60,13 +50,7 @@
             <div class="card text-center">
                 <div class="card-body">
                     <h5 class="card-title">Valor Total</h5>
-                    <h3 class="text-info">
-                        {% if proveedores_analisis %}
-                            ${{ proveedores_analisis.0.total_ingresos|floatformat:2 }}
-                        {% else %}
-                            $0.00
-                        {% endif %}
-                    </h3>
+                    <h3 class="text-info">${{ monto_total_proveedores|floatformat:2 }}</h3>
                 </div>
             </div>
         </div>

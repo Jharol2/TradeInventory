@@ -34,7 +34,7 @@
             <div class="card text-center">
                 <div class="card-body">
                     <h5 class="card-title">Total Clientes</h5>
-                    <h3 class="text-primary">{{ clientes_top|length }}</h3>
+                    <h3 class="text-primary">{{ total_clientes }}</h3>
                 </div>
             </div>
         </div>
@@ -42,17 +42,7 @@
             <div class="card text-center">
                 <div class="card-body">
                     <h5 class="card-title">Total Compras</h5>
-                    <h3 class="text-success">
-                        {% if clientes_top %}
-                            {% for cliente in clientes_top %}
-                                {% if forloop.first %}
-                                    {{ cliente.total_compras }}
-                                {% endif %}
-                            {% endfor %}
-                        {% else %}
-                            0
-                        {% endif %}
-                    </h3>
+                    <h3 class="text-success">{{ total_compras }}</h3>
                 </div>
             </div>
         </div>
@@ -60,13 +50,7 @@
             <div class="card text-center">
                 <div class="card-body">
                     <h5 class="card-title">Valor Total</h5>
-                    <h3 class="text-info">
-                        {% if clientes_top %}
-                            ${{ clientes_top.0.total_gastado|floatformat:2 }}
-                        {% else %}
-                            $0.00
-                        {% endif %}
-                    </h3>
+                    <h3 class="text-info">${{ monto_total_compras|floatformat:2 }}</h3>
                 </div>
             </div>
         </div>
@@ -118,7 +102,7 @@
                                 <span class="badge bg-primary">{{ cliente.total_compras }}</span>
                             </td>
                             <td>
-                                <span class="text-success fw-bold">${{ cliente.total_gastado|floatformat:2 }}</span>
+                                <span class="text-success fw-bold">${{ cliente.monto_total|floatformat:2 }}</span>
                             </td>
                             <td>
                                 <span class="text-info">${{ cliente.promedio_compra|floatformat:2 }}</span>
@@ -219,7 +203,7 @@
                             Mayor gasto total
                             <span class="badge bg-success rounded-pill">
                                 {% if clientes_top %}
-                                    ${{ clientes_top.0.total_gastado|floatformat:2 }}
+                                    ${{ clientes_top.0.monto_total|floatformat:2 }}
                                 {% else %}
                                     $0.00
                                 {% endif %}

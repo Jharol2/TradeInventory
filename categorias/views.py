@@ -21,7 +21,7 @@ Características:
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.db.models import Q
+from django.db.models import Q, Count
 from .models import Categoria
 from .forms import CategoriaForm
 from productos.models import Producto
@@ -67,8 +67,17 @@ def lista_categorias(request):
             Q(descripcion__icontains=query)   # Buscar en descripción
         )
     
-    # Ordenar categorías por nombre alfabéticamente
-    categorias_list = categorias_list.order_by('nombre')
+    # Obtener parámetro de ordenamiento
+    orden = request.GET.get('orden', '-fecha_creacion')  # Por defecto más recientes primero
+    
+    # Manejar ordenamiento especial por número de productos
+    if orden in ['productos', '-productos']:
+        categorias_list = categorias_list.annotate(
+            num_productos=Count('productos')
+        ).order_by(orden.replace('productos', 'num_productos'))
+    else:
+        # Ordenar categorías según el parámetro recibido
+        categorias_list = categorias_list.order_by(orden)
     
     # Preparar contexto para la plantilla
     context = {

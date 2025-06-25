@@ -128,4 +128,4 @@ class Producto(models.Model):
         """
         verbose_name = 'Producto'
         verbose_name_plural = 'Productos'
-        ordering = ['nombre']  # Ordenar por nombre por defecto
+        ordering = ['-fecha_creacion']  # Ordenar por fecha de creación (más recientes primero)

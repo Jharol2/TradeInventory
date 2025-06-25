@@ -23,7 +23,7 @@ class ClienteViewSet(viewsets.ModelViewSet):
     Proporciona operaciones CRUD completas
     """
     queryset = Cliente.objects.all()
-    permission_classes = [IsAuthenticated]
+    # permission_classes = [IsAuthenticated]  # Comentado temporalmente para pruebas
     
     def get_serializer_class(self):
         """Retorna el serializer apropiado según la acción"""

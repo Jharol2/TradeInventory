@@ -125,7 +125,7 @@ class Cliente(models.Model):
     class Meta:
         verbose_name = 'Cliente'
         verbose_name_plural = 'Clientes'
-        ordering = ['nombre']
+        ordering = ['-fecha_creacion']
 
 class Fiado(models.Model):
     cliente = models.ForeignKey(Cliente, on_delete=models.CASCADE, related_name='fiados')

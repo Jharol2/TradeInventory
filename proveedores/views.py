@@ -66,8 +66,8 @@ def lista_proveedores(request):
             Q(direccion__icontains=query)     # Buscar en dirección
         )
     
-    # Ordenar proveedores por nombre alfabéticamente
-    proveedores_list = proveedores_list.order_by('nombre')
+    # Ordenar proveedores por fecha de creación (más recientes primero)
+    proveedores_list = proveedores_list.order_by('-fecha_creacion')
     
     # Preparar contexto para la plantilla
     context = {

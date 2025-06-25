@@ -16,4 +16,4 @@ class Categoria(models.Model):
     class Meta:
         verbose_name = 'Categoría'
         verbose_name_plural = 'Categorías'
-        ordering = ['nombre']
+        ordering = ['-fecha_creacion']

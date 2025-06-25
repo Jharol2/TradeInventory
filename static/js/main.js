@@ -1,4 +1,4 @@
-// JavaScript principal para TradeInventory
+// JavaScript principal para TradeInventory - Completamente Responsive
 
 document.addEventListener('DOMContentLoaded', function() {
     
@@ -13,6 +13,218 @@ document.addEventListener('DOMContentLoaded', function() {
     var popoverList = popoverTriggerList.map(function (popoverTriggerEl) {
         return new bootstrap.Popover(popoverTriggerEl);
     });
+
+    // ===== FUNCIONALIDADES RESPONSIVE =====
+    
+    // Función para manejar el sidebar móvil
+    function setupMobileSidebar() {
+        const mobileMenuToggle = document.getElementById('mobileMenuToggle');
+        const sidebar = document.getElementById('sidebar');
+        const sidebarOverlay = document.getElementById('sidebarOverlay');
+        
+        if (!mobileMenuToggle || !sidebar) return;
+        
+        // Función para abrir/cerrar sidebar
+        function toggleSidebar() {
+            sidebar.classList.toggle('show');
+            sidebarOverlay.classList.toggle('show');
+            document.body.style.overflow = sidebar.classList.contains('show') ? 'hidden' : '';
+        }
+        
+        // Event listeners
+        mobileMenuToggle.addEventListener('click', toggleSidebar);
+        
+        if (sidebarOverlay) {
+            sidebarOverlay.addEventListener('click', toggleSidebar);
+        }
+        
+        // Cerrar sidebar al hacer clic en un enlace (en móvil)
+        const sidebarLinks = sidebar.querySelectorAll('.nav-link');
+        sidebarLinks.forEach(link => {
+            link.addEventListener('click', function() {
+                if (window.innerWidth <= 575) {
+                    toggleSidebar();
+                }
+            });
+        });
+        
+        // Cerrar sidebar al redimensionar la ventana
+        window.addEventListener('resize', function() {
+            if (window.innerWidth > 575) {
+                sidebar.classList.remove('show');
+                sidebarOverlay.classList.remove('show');
+                document.body.style.overflow = '';
+            }
+        });
+    }
+    
+    // Función para hacer tablas responsivas
+    function setupResponsiveTables() {
+        const tables = document.querySelectorAll('.table');
+        
+        tables.forEach(table => {
+            // Agregar clase table-responsive si no existe
+            if (!table.parentElement.classList.contains('table-responsive')) {
+                const wrapper = document.createElement('div');
+                wrapper.className = 'table-responsive';
+                table.parentNode.insertBefore(wrapper, table);
+                wrapper.appendChild(table);
+            }
+        });
+    }
+    
+    // Función para ajustar formularios en móvil
+    function setupResponsiveForms() {
+        const forms = document.querySelectorAll('form');
+        
+        forms.forEach(form => {
+            // Agregar clases responsive a los campos
+            const inputs = form.querySelectorAll('input, select, textarea');
+            inputs.forEach(input => {
+                if (!input.classList.contains('form-control') && !input.classList.contains('form-select')) {
+                    input.classList.add('form-control');
+                }
+            });
+            
+            // Hacer botones responsivos
+            const buttons = form.querySelectorAll('.btn');
+            buttons.forEach(button => {
+                if (window.innerWidth <= 575) {
+                    button.classList.add('w-100', 'mb-2');
+                }
+            });
+        });
+    }
+    
+    // Función para ajustar cards en móvil
+    function setupResponsiveCards() {
+        const cards = document.querySelectorAll('.card');
+        
+        cards.forEach(card => {
+            if (window.innerWidth <= 575) {
+                card.classList.add('mb-3');
+            }
+        });
+    }
+    
+    // Función para detectar orientación del dispositivo
+    function handleOrientationChange() {
+        const isLandscape = window.innerWidth > window.innerHeight;
+        
+        if (isLandscape && window.innerWidth <= 575) {
+            // Ajustes específicos para móvil en landscape
+            document.body.classList.add('landscape-mobile');
+        } else {
+            document.body.classList.remove('landscape-mobile');
+        }
+    }
+    
+    // Función para optimizar imágenes en móvil
+    function setupResponsiveImages() {
+        const images = document.querySelectorAll('img');
+        
+        images.forEach(img => {
+            if (!img.classList.contains('img-fluid')) {
+                img.classList.add('img-fluid');
+            }
+        });
+    }
+    
+    // Función para ajustar modales en móvil
+    function setupResponsiveModals() {
+        const modals = document.querySelectorAll('.modal');
+        
+        modals.forEach(modal => {
+            if (window.innerWidth <= 575) {
+                modal.classList.add('modal-fullscreen-sm-down');
+            }
+        });
+    }
+    
+    // Función para manejar gestos táctiles
+    function setupTouchGestures() {
+        let startX = 0;
+        let startY = 0;
+        let endX = 0;
+        let endY = 0;
+        
+        document.addEventListener('touchstart', function(e) {
+            startX = e.touches[0].clientX;
+            startY = e.touches[0].clientY;
+        });
+        
+        document.addEventListener('touchend', function(e) {
+            endX = e.changedTouches[0].clientX;
+            endY = e.changedTouches[0].clientY;
+            
+            const diffX = startX - endX;
+            const diffY = startY - endY;
+            
+            // Swipe horizontal para abrir/cerrar sidebar
+            if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 50) {
+                const sidebar = document.getElementById('sidebar');
+                if (sidebar && window.innerWidth <= 575) {
+                    if (diffX > 0 && startX < 100) {
+                        // Swipe izquierda desde el borde izquierdo
+                        sidebar.classList.add('show');
+                        document.getElementById('sidebarOverlay').classList.add('show');
+                    } else if (diffX < 0 && sidebar.classList.contains('show')) {
+                        // Swipe derecha para cerrar
+                        sidebar.classList.remove('show');
+                        document.getElementById('sidebarOverlay').classList.remove('show');
+                    }
+                }
+            }
+        });
+    }
+    
+    // Función para optimizar rendimiento en móvil
+    function setupMobileOptimizations() {
+        if (window.innerWidth <= 575) {
+            // Reducir animaciones en móvil
+            document.body.style.setProperty('--transition-duration', '0.2s');
+            
+            // Optimizar scroll
+            document.body.style.setProperty('scroll-behavior', 'smooth');
+            
+            // Prevenir zoom en inputs
+            const inputs = document.querySelectorAll('input, select, textarea');
+            inputs.forEach(input => {
+                input.style.fontSize = '16px'; // Previene zoom en iOS
+            });
+        }
+    }
+    
+    // Función para manejar cambios de tamaño de ventana
+    function handleResize() {
+        setupResponsiveForms();
+        setupResponsiveCards();
+        setupResponsiveModals();
+        setupMobileOptimizations();
+        handleOrientationChange();
+    }
+    
+    // Inicializar todas las funcionalidades responsive
+    function initResponsiveFeatures() {
+        setupMobileSidebar();
+        setupResponsiveTables();
+        setupResponsiveForms();
+        setupResponsiveCards();
+        setupResponsiveImages();
+        setupResponsiveModals();
+        setupTouchGestures();
+        setupMobileOptimizations();
+        handleOrientationChange();
+        
+        // Event listeners para cambios de tamaño
+        window.addEventListener('resize', handleResize);
+        window.addEventListener('orientationchange', handleOrientationChange);
+    }
+    
+    // Ejecutar inicialización responsive
+    initResponsiveFeatures();
+
+    // ===== FUNCIONALIDADES EXISTENTES =====
 
     // Función para mostrar mensajes de confirmación
     // window.showConfirmModal = function(url, message, buttonText = 'Confirmar') {
@@ -202,26 +414,15 @@ document.addEventListener('DOMContentLoaded', function() {
         const hasNumbers = /\d/.test(password);
         const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(password);
 
-        const errors = [];
-        if (password.length < minLength) {
-            errors.push(`La contraseña debe tener al menos ${minLength} caracteres`);
-        }
-        if (!hasUpperCase) {
-            errors.push('La contraseña debe contener al menos una letra mayúscula');
-        }
-        if (!hasLowerCase) {
-            errors.push('La contraseña debe contener al menos una letra minúscula');
-        }
-        if (!hasNumbers) {
-            errors.push('La contraseña debe contener al menos un número');
-        }
-        if (!hasSpecialChar) {
-            errors.push('La contraseña debe contener al menos un carácter especial');
-        }
-
         return {
-            isValid: errors.length === 0,
-            errors: errors
+            isValid: password.length >= minLength && hasUpperCase && hasLowerCase && hasNumbers && hasSpecialChar,
+            errors: {
+                length: password.length < minLength,
+                upperCase: !hasUpperCase,
+                lowerCase: !hasLowerCase,
+                numbers: !hasNumbers,
+                specialChar: !hasSpecialChar
+            }
         };
     };
 
@@ -263,15 +464,17 @@ document.addEventListener('DOMContentLoaded', function() {
     };
 
     // Función para debounce
-    window.debounce = function(func, wait) {
+    window.debounce = function(func, wait, immediate) {
         let timeout;
         return function executedFunction(...args) {
             const later = () => {
-                clearTimeout(timeout);
-                func(...args);
+                timeout = null;
+                if (!immediate) func(...args);
             };
+            const callNow = immediate && !timeout;
             clearTimeout(timeout);
             timeout = setTimeout(later, wait);
+            if (callNow) func(...args);
         };
     };
 
@@ -295,80 +498,90 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Función para configurar eventos globales
 function setupGlobalEvents() {
-    // Auto-hide alerts después de 5 segundos
-    const alerts = document.querySelectorAll('.alert');
-    alerts.forEach(alert => {
-        setTimeout(() => {
-            if (alert.parentNode) {
-                const bsAlert = new bootstrap.Alert(alert);
-                bsAlert.close();
-            }
-        }, 5000);
-    });
-
-    // Validación de formularios en tiempo real
-    const forms = document.querySelectorAll('form[data-validate="true"]');
-    forms.forEach(form => {
-        const inputs = form.querySelectorAll('input, select, textarea');
-        inputs.forEach(input => {
-            input.addEventListener('blur', function() {
-                validateField(this);
-            });
-        });
-    });
-
-    // Configurar tooltips para elementos dinámicos
-    document.addEventListener('mouseover', function(e) {
-        if (e.target.hasAttribute('data-bs-toggle') && e.target.getAttribute('data-bs-toggle') === 'tooltip') {
-            if (!e.target.hasAttribute('data-bs-original-title')) {
-                new bootstrap.Tooltip(e.target);
-            }
+    // Prevenir envío de formularios con Enter en campos de búsqueda
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter' && e.target.type === 'search') {
+            e.preventDefault();
+            e.target.form.submit();
         }
     });
+
+    // Mejorar accesibilidad
+    document.addEventListener('keydown', function(e) {
+        // Navegación con teclado para modales
+        if (e.key === 'Escape') {
+            const modals = document.querySelectorAll('.modal.show');
+            modals.forEach(modal => {
+                const modalInstance = bootstrap.Modal.getInstance(modal);
+                if (modalInstance) {
+                    modalInstance.hide();
+                }
+            });
+        }
+    });
+
+    // Lazy loading para imágenes
+    if ('IntersectionObserver' in window) {
+        const imageObserver = new IntersectionObserver((entries, observer) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const img = entry.target;
+                    img.src = img.dataset.src;
+                    img.classList.remove('lazy');
+                    imageObserver.unobserve(img);
+                }
+            });
+        });
+
+        document.querySelectorAll('img[data-src]').forEach(img => {
+            imageObserver.observe(img);
+        });
+    }
 }
 
-// Función para validar campos individuales
+// Función para validar campos en tiempo real
 function validateField(field) {
     const value = field.value.trim();
     const type = field.type;
     const required = field.hasAttribute('required');
-
-    // Limpiar clases de validación previas
+    
+    // Remover clases de validación previas
     field.classList.remove('is-valid', 'is-invalid');
-
+    
     // Validar campo requerido
     if (required && !value) {
         field.classList.add('is-invalid');
         return false;
     }
-
+    
     // Validaciones específicas por tipo
-    if (value) {
-        switch (type) {
-            case 'email':
-                if (!window.validateEmail(value)) {
-                    field.classList.add('is-invalid');
-                    return false;
-                }
-                break;
-            case 'tel':
-                if (value.length < 10) {
-                    field.classList.add('is-invalid');
-                    return false;
-                }
-                break;
-            case 'number':
-                if (isNaN(value) || value < 0) {
-                    field.classList.add('is-invalid');
-                    return false;
-                }
-                break;
-        }
+    switch (type) {
+        case 'email':
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (value && !emailRegex.test(value)) {
+                field.classList.add('is-invalid');
+                return false;
+            }
+            break;
+        case 'tel':
+            const phoneRegex = /^[\+]?[0-9\s\-\(\)]{10,}$/;
+            if (value && !phoneRegex.test(value)) {
+                field.classList.add('is-invalid');
+                return false;
+            }
+            break;
+        case 'number':
+            if (value && isNaN(value)) {
+                field.classList.add('is-invalid');
+                return false;
+            }
+            break;
     }
-
-    // Si pasa todas las validaciones
+    
+    // Campo válido
     if (value) {
         field.classList.add('is-valid');
     }
+    
     return true;
 } 

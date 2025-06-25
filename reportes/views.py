@@ -130,6 +130,7 @@ def reporte_productos(request):
         'productos_bajo_stock': productos_bajo_stock,
         'productos_mas_vendidos': productos_mas_vendidos,
         'productos_rotacion': productos_rotacion,
+        'total_productos': Producto.objects.count(),  # Total real de productos
         'fecha_inicio': fecha_inicio.strftime('%Y-%m-%d'),
         'fecha_fin': fecha_fin.strftime('%Y-%m-%d'),
     }
@@ -178,15 +179,38 @@ def reporte_ventas(request):
     
     # Análisis 2: Ventas por mes
     # Agrupa ventas por mes y año para análisis temporal
-    ventas_por_mes = Venta.objects.filter(
+    # Usamos una aproximación más simple y compatible
+    ventas_por_mes = []
+    ventas_totales = Venta.objects.filter(
         fecha__range=(fecha_inicio, fecha_fin)
-    ).extra(
-        select={'mes': "EXTRACT(month FROM fecha)", 'año': "EXTRACT(year FROM fecha)"}
-    ).values('mes', 'año').annotate(
-        total_ventas=Count('id'),
-        monto_total=Sum('total'),
-        promedio_venta=Avg('total')
-    ).order_by('año', 'mes')
+    ).values('fecha', 'total')
+    
+    # Agrupar manualmente por mes y año
+    meses_data = {}
+    for venta in ventas_totales:
+        fecha = venta['fecha']
+        mes_key = f"{fecha.year}-{fecha.month:02d}"
+        
+        if mes_key not in meses_data:
+            meses_data[mes_key] = {
+                'mes': fecha.month,
+                'año': fecha.year,
+                'total_ventas': 0,
+                'monto_total': 0,
+                'ventas_list': []
+            }
+        
+        meses_data[mes_key]['total_ventas'] += 1
+        meses_data[mes_key]['monto_total'] += float(venta['total'])
+        meses_data[mes_key]['ventas_list'].append(venta['total'])
+    
+    # Calcular promedios y ordenar
+    for mes_key, data in meses_data.items():
+        data['promedio_venta'] = data['monto_total'] / data['total_ventas'] if data['total_ventas'] > 0 else 0
+        ventas_por_mes.append(data)
+    
+    # Ordenar por año y mes
+    ventas_por_mes.sort(key=lambda x: (x['año'], x['mes']))
     
     # Análisis 3: Productos top en ventas
     # Identifica los productos más vendidos en el período
@@ -216,6 +240,8 @@ def reporte_ventas(request):
         'ventas_por_dia': ventas_por_dia,
         'ventas_por_mes': ventas_por_mes,
         'productos_top': productos_top,
+        'total_ventas': Venta.objects.filter(fecha__range=(fecha_inicio, fecha_fin)).count(),  # Total real de ventas
+        'monto_total': Venta.objects.filter(fecha__range=(fecha_inicio, fecha_fin)).aggregate(total=Sum('total'))['total'] or 0,  # Monto total
         'fecha_inicio': fecha_inicio.strftime('%Y-%m-%d'),
         'fecha_fin': fecha_fin.strftime('%Y-%m-%d'),
     }
@@ -278,6 +304,9 @@ def reporte_clientes(request):
     # Preparar contexto para la plantilla
     context = {
         'clientes_top': clientes_top,
+        'total_clientes': Cliente.objects.count(),  # Total real de clientes
+        'total_compras': Venta.objects.filter(fecha__range=(fecha_inicio, fecha_fin), cliente__isnull=False).count(),  # Total de compras
+        'monto_total_compras': Venta.objects.filter(fecha__range=(fecha_inicio, fecha_fin), cliente__isnull=False).aggregate(total=Sum('total'))['total'] or 0,  # Monto total
         'fecha_inicio': fecha_inicio.strftime('%Y-%m-%d'),
         'fecha_fin': fecha_fin.strftime('%Y-%m-%d'),
     }
@@ -408,6 +437,9 @@ def reporte_proveedores(request):
         'proveedores_analisis': proveedores_analisis,
         'productos_por_proveedor': productos_por_proveedor,
         'proveedores_margen': proveedores_margen,
+        'total_proveedores': Proveedor.objects.count(),  # Total real de proveedores
+        'total_productos_proveedores': Producto.objects.filter(proveedor__isnull=False).count(),  # Total de productos con proveedor
+        'monto_total_proveedores': sum(p['total_ingresos'] for p in proveedores_analisis) if proveedores_analisis else 0,  # Monto total
         'fecha_inicio': fecha_inicio.strftime('%Y-%m-%d'),
         'fecha_fin': fecha_fin.strftime('%Y-%m-%d'),
     }
@@ -503,6 +535,7 @@ def reporte_fiados(request):
         'productos_fiados': productos_fiados,
         'total_fiado_pendiente': total_fiado_pendiente,
         'total_clientes_fiados': total_clientes_fiados,
+        'total_fiados_pendientes': fiados_pendientes.count(),  # Total real de fiados pendientes
         'fecha_inicio': fecha_inicio,
         'fecha_fin': fecha_fin,
     }
@@ -1053,6 +1086,7 @@ def reporte_categorias(request):
         'tendencias_mensuales': tendencias_mensuales,
         'todas_categorias': todas_categorias,
         'categoria_seleccionada': categoria_id,
+        'total_categorias': Categoria.objects.count(),  # Total real de categorías
         'fecha_inicio': fecha_inicio.strftime('%Y-%m-%d'),
         'fecha_fin': fecha_fin.strftime('%Y-%m-%d'),
         'total_ingresos_general': total_ingresos_general,
@@ -2033,3 +2067,242 @@ def exportar_reporte_ventas_excel(request, ventas_por_dia, ventas_por_mes, produ
     response['Content-Disposition'] = f'attachment; filename="{filename}"'
     
     return response 
+
+def exportar_reporte_clientes_excel(request, clientes_top, fecha_inicio, fecha_fin):
+    """Exportar reporte de clientes a Excel con formato profesional"""
+    
+    # Crear el archivo Excel en memoria
+    output = io.BytesIO()
+    workbook = xlsxwriter.Workbook(output)
+    
+    # Definir formatos mejorados
+    header_format = workbook.add_format({
+        'bold': True,
+        'text_wrap': True,
+        'valign': 'vcenter',
+        'align': 'center',
+        'fg_color': '#2E75B6',
+        'font_color': 'white',
+        'border': 1,
+        'font_size': 11
+    })
+    
+    title_format = workbook.add_format({
+        'bold': True,
+        'font_size': 18,
+        'align': 'center',
+        'fg_color': '#1F4E79',
+        'font_color': 'white',
+        'border': 1,
+        'valign': 'vcenter'
+    })
+    
+    subtitle_format = workbook.add_format({
+        'bold': True,
+        'font_size': 14,
+        'fg_color': '#4472C4',
+        'font_color': 'white',
+        'border': 1,
+        'align': 'center'
+    })
+    
+    date_format = workbook.add_format({
+        'num_format': 'dd/mm/yyyy',
+        'border': 1,
+        'align': 'center'
+    })
+    
+    currency_format = workbook.add_format({
+        'num_format': '$#,##0.00',
+        'border': 1,
+        'align': 'right'
+    })
+    
+    number_format = workbook.add_format({
+        'num_format': '#,##0',
+        'border': 1,
+        'align': 'center'
+    })
+    
+    percent_format = workbook.add_format({
+        'num_format': '0.00%',
+        'border': 1,
+        'align': 'center'
+    })
+    
+    cell_format = workbook.add_format({
+        'border': 1,
+        'align': 'left',
+        'valign': 'vcenter',
+        'text_wrap': True
+    })
+    
+    success_format = workbook.add_format({
+        'fg_color': '#D4EDDA',
+        'border': 1,
+        'font_color': '#155724',
+        'bold': True,
+        'align': 'center'
+    })
+    
+    info_format = workbook.add_format({
+        'fg_color': '#E6F3FF',
+        'border': 1,
+        'font_color': '#0066CC',
+        'align': 'left'
+    })
+    
+    # ===== HOJA 1: RESUMEN EJECUTIVO =====
+    summary_sheet = workbook.add_worksheet('📊 RESUMEN EJECUTIVO')
+    
+    # Título principal
+    summary_sheet.merge_range('A1:J1', 'REPORTE DE CLIENTES - TRADE INVENTORY', title_format)
+    summary_sheet.merge_range('A2:J2', f'Período de Análisis: {fecha_inicio.strftime("%d/%m/%Y")} - {fecha_fin.strftime("%d/%m/%Y")}', subtitle_format)
+    
+    # Información del reporte
+    summary_sheet.write('A4', '📅 Fecha de Generación:', info_format)
+    summary_sheet.write('B4', timezone.now().strftime("%d/%m/%Y %H:%M"), date_format)
+    
+    summary_sheet.write('A5', '👤 Generado por:', info_format)
+    summary_sheet.write('B5', request.user.get_full_name() or request.user.username, cell_format)
+    
+    # Estadísticas generales
+    total_clientes = Cliente.objects.count()
+    total_compras = Venta.objects.filter(fecha__range=(fecha_inicio, fecha_fin), cliente__isnull=False).count()
+    total_monto = Venta.objects.filter(fecha__range=(fecha_inicio, fecha_fin), cliente__isnull=False).aggregate(total=Sum('total'))['total'] or 0
+    promedio_compra = total_monto / total_compras if total_compras > 0 else 0
+    clientes_activos = len(clientes_top)
+    
+    # Sección de estadísticas
+    summary_sheet.write('A7', '📈 ESTADÍSTICAS GENERALES DE CLIENTES', subtitle_format)
+    
+    # Primera columna
+    summary_sheet.write('A8', 'Total de Clientes:', header_format)
+    summary_sheet.write('B8', total_clientes, number_format)
+    
+    summary_sheet.write('A9', 'Clientes Activos:', header_format)
+    summary_sheet.write('B9', clientes_activos, number_format)
+    
+    summary_sheet.write('A10', 'Total de Compras:', header_format)
+    summary_sheet.write('B10', total_compras, number_format)
+    
+    summary_sheet.write('A11', 'Monto Total:', header_format)
+    summary_sheet.write('B11', total_monto, currency_format)
+    
+    # Segunda columna
+    summary_sheet.write('D8', 'Promedio por Compra:', header_format)
+    summary_sheet.write('E8', promedio_compra, currency_format)
+    
+    summary_sheet.write('D9', '% Clientes Activos:', header_format)
+    summary_sheet.write('E9', clientes_activos / total_clientes if total_clientes > 0 else 0, percent_format)
+    
+    summary_sheet.write('D10', 'Mejor Cliente:', header_format)
+    if clientes_top:
+        mejor_cliente = clientes_top[0]
+        summary_sheet.write('E10', mejor_cliente['cliente__nombre'], cell_format)
+    else:
+        summary_sheet.write('E10', 'N/A', cell_format)
+    
+    summary_sheet.write('D11', 'Valor Mejor Cliente:', header_format)
+    if clientes_top:
+        summary_sheet.write('E11', clientes_top[0]['monto_total'], currency_format)
+    else:
+        summary_sheet.write('E11', '$0.00', currency_format)
+    
+    # ===== HOJA 2: CLIENTES TOP =====
+    clientes_sheet = workbook.add_worksheet('🏆 CLIENTES TOP')
+    
+    # Título
+    clientes_sheet.merge_range('A1:G1', 'CLIENTES CON MÁS COMPRAS - ANÁLISIS DE RENDIMIENTO', title_format)
+    
+    # Encabezados
+    headers = ['Ranking', 'Cliente', 'Documento', 'Total Compras', 'Monto Total', 'Promedio por Compra', 'Última Compra']
+    for col, header in enumerate(headers):
+        clientes_sheet.write(2, col, header, header_format)
+    
+    # Datos
+    row = 3
+    for i, cliente in enumerate(clientes_top, 1):
+        clientes_sheet.write(row, 0, i, number_format)  # Ranking
+        clientes_sheet.write(row, 1, cliente['cliente__nombre'], cell_format)
+        clientes_sheet.write(row, 2, cliente['cliente__documento'] or 'Sin documento', cell_format)
+        clientes_sheet.write(row, 3, cliente['total_compras'], number_format)
+        clientes_sheet.write(row, 4, cliente['monto_total'], currency_format)
+        clientes_sheet.write(row, 5, cliente['promedio_compra'], currency_format)
+        clientes_sheet.write(row, 6, cliente['ultima_compra'], date_format)
+        row += 1
+    
+    # Ajustar ancho de columnas
+    clientes_sheet.set_column('A:A', 10)  # Ranking
+    clientes_sheet.set_column('B:B', 30)  # Cliente
+    clientes_sheet.set_column('C:C', 15)  # Documento
+    clientes_sheet.set_column('D:D', 15)  # Compras
+    clientes_sheet.set_column('E:F', 18)  # Montos
+    clientes_sheet.set_column('G:G', 15)  # Última Compra
+    
+    # ===== HOJA 3: ANÁLISIS DE SEGMENTACIÓN =====
+    segmentacion_sheet = workbook.add_worksheet('📊 SEGMENTACIÓN')
+    
+    # Título
+    segmentacion_sheet.merge_range('A1:E1', 'ANÁLISIS DE SEGMENTACIÓN DE CLIENTES', title_format)
+    
+    # Encabezados
+    headers = ['Segmento', 'Cantidad', 'Monto Total', 'Promedio por Cliente', 'Participación']
+    for col, header in enumerate(headers):
+        segmentacion_sheet.write(2, col, header, header_format)
+    
+    # Datos de segmentación
+    row = 3
+    
+    # Clientes de alto valor (>$100 promedio)
+    alto_valor = [c for c in clientes_top if c['promedio_compra'] > 100]
+    if alto_valor:
+        monto_alto = sum(c['monto_total'] for c in alto_valor)
+        segmentacion_sheet.write(row, 0, 'Alto Valor (>$100)', cell_format)
+        segmentacion_sheet.write(row, 1, len(alto_valor), number_format)
+        segmentacion_sheet.write(row, 2, monto_alto, currency_format)
+        segmentacion_sheet.write(row, 3, monto_alto / len(alto_valor) if alto_valor else 0, currency_format)
+        segmentacion_sheet.write(row, 4, monto_alto / total_monto if total_monto > 0 else 0, percent_format)
+        row += 1
+    
+    # Clientes de valor medio ($50-$100 promedio)
+    medio_valor = [c for c in clientes_top if 50 <= c['promedio_compra'] <= 100]
+    if medio_valor:
+        monto_medio = sum(c['monto_total'] for c in medio_valor)
+        segmentacion_sheet.write(row, 0, 'Valor Medio ($50-$100)', cell_format)
+        segmentacion_sheet.write(row, 1, len(medio_valor), number_format)
+        segmentacion_sheet.write(row, 2, monto_medio, currency_format)
+        segmentacion_sheet.write(row, 3, monto_medio / len(medio_valor) if medio_valor else 0, currency_format)
+        segmentacion_sheet.write(row, 4, monto_medio / total_monto if total_monto > 0 else 0, percent_format)
+        row += 1
+    
+    # Clientes de bajo valor (<$50 promedio)
+    bajo_valor = [c for c in clientes_top if c['promedio_compra'] < 50]
+    if bajo_valor:
+        monto_bajo = sum(c['monto_total'] for c in bajo_valor)
+        segmentacion_sheet.write(row, 0, 'Bajo Valor (<$50)', cell_format)
+        segmentacion_sheet.write(row, 1, len(bajo_valor), number_format)
+        segmentacion_sheet.write(row, 2, monto_bajo, currency_format)
+        segmentacion_sheet.write(row, 3, monto_bajo / len(bajo_valor) if bajo_valor else 0, currency_format)
+        segmentacion_sheet.write(row, 4, monto_bajo / total_monto if total_monto > 0 else 0, percent_format)
+    
+    # Ajustar ancho de columnas
+    segmentacion_sheet.set_column('A:A', 25)  # Segmento
+    segmentacion_sheet.set_column('B:B', 15)  # Cantidad
+    segmentacion_sheet.set_column('C:D', 18)  # Montos
+    segmentacion_sheet.set_column('E:E', 15)  # Participación
+    
+    # Cerrar el workbook
+    workbook.close()
+    
+    # Preparar la respuesta HTTP
+    output.seek(0)
+    filename = f'Reporte_Clientes_{fecha_inicio.strftime("%Y%m%d")}_{fecha_fin.strftime("%Y%m%d")}.xlsx'
+    
+    response = HttpResponse(
+        output.read(),
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    )
+    response['Content-Disposition'] = f'attachment; filename="{filename}"'
+    
+    return response

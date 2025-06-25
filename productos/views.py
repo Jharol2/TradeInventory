@@ -82,8 +82,11 @@ def lista_productos(request):
         productos_list = productos_list.filter(activo=False)
     # Si es 'todos', no se aplica filtro de estado
     
-    # Ordenar productos por nombre alfabéticamente
-    productos_list = productos_list.order_by('nombre')
+    # Obtener parámetro de ordenamiento
+    orden = request.GET.get('orden', '-fecha_creacion')  # Por defecto más recientes primero
+    
+    # Ordenar productos según el parámetro recibido
+    productos_list = productos_list.order_by(orden)
     
     # Configurar paginación para mejorar rendimiento
     paginator = Paginator(productos_list, 12)  # 12 productos por página

@@ -86,8 +86,8 @@
                             <option value="-precio" {% if request.GET.orden == '-precio' %}selected{% endif %}>Precio Mayor</option>
                             <option value="stock_inicial" {% if request.GET.orden == 'stock_inicial' %}selected{% endif %}>Stock Menor</option>
                             <option value="-stock_inicial" {% if request.GET.orden == '-stock_inicial' %}selected{% endif %}>Stock Mayor</option>
-                            <option value="fecha_creacion" {% if request.GET.orden == 'fecha_creacion' %}selected{% endif %}>Más Recientes</option>
-                            <option value="-fecha_creacion" {% if request.GET.orden == '-fecha_creacion' %}selected{% endif %}>Más Antiguos</option>
+                            <option value="fecha_creacion" {% if request.GET.orden == 'fecha_creacion' %}selected{% endif %}>Más Antiguos</option>
+                            <option value="-fecha_creacion" {% if request.GET.orden == '-fecha_creacion' or not request.GET.orden %}selected{% endif %}>Más Recientes</option>
                         </select>
                     </div>
                     <div class="col-12">

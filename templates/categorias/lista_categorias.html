@@ -65,8 +65,8 @@
                             <option value="-nombre" {% if request.GET.orden == '-nombre' %}selected{% endif %}>Nombre Z-A</option>
                             <option value="productos" {% if request.GET.orden == 'productos' %}selected{% endif %}>Más productos</option>
                             <option value="-productos" {% if request.GET.orden == '-productos' %}selected{% endif %}>Menos productos</option>
-                            <option value="fecha" {% if request.GET.orden == 'fecha' %}selected{% endif %}>Más recientes</option>
-                            <option value="-fecha" {% if request.GET.orden == '-fecha' %}selected{% endif %}>Más antiguos</option>
+                            <option value="fecha_creacion" {% if request.GET.orden == 'fecha_creacion' %}selected{% endif %}>Más antiguos</option>
+                            <option value="-fecha_creacion" {% if request.GET.orden == '-fecha_creacion' or not request.GET.orden %}selected{% endif %}>Más recientes</option>
                         </select>
                     </div>
                     <div class="col-md-3">

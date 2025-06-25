@@ -128,18 +128,39 @@ dmypy.json
 # Pyre type checker
 .pyre/
 
-# IDE
-.vscode/
-.idea/
-*.swp
-*.swo
-
-# OS
-.DS_Store
-Thumbs.db
+# Django specific
+*.log
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
 
 # Media files (uploads)
 media/
 
-# Static files (if using collectstatic)
-staticfiles/ 
+# Static files (if collected)
+staticfiles/
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Backup files
+*.bak
+*.backup
+*.old
+
+# Temporary files
+*.tmp
+*.temp 

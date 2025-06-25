@@ -30,7 +30,7 @@ class ProductoSerializer(serializers.ModelSerializer):
     class Meta:
         model = Producto
         fields = [
-            'id', 'nombre', 'descripcion', 'precio', 'stock_actual', 
+            'id', 'nombre', 'descripcion', 'precio', 'stock_inicial', 'stock_actual', 
             'stock_minimo', 'categoria', 'proveedor', 'imagen', 
             'activo', 'fecha_creacion', 'categoria_id', 'proveedor_id'
         ]
@@ -53,6 +53,6 @@ class ProductoCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Producto
         fields = [
-            'nombre', 'descripcion', 'precio', 'stock_actual', 
+            'nombre', 'descripcion', 'precio', 'stock_inicial', 'stock_actual', 
             'stock_minimo', 'categoria', 'proveedor', 'imagen'
         ] 
